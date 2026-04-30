@@ -1,19 +1,22 @@
+'use strict'
+
 const express = require('express')
 const router = express.Router()
 
-const  {
- registerEmployeeUser,
-   registerCitizenUser ,
-  loginUser
+const {
+  registerEmployeeUser,
+  registerCitizenUser,
+  verifyRegisterOtpUser,
+  loginUser,
+  verifyLoginOtpUser,
 } = require('../controllers/AuthController')
 
-// register
 /**
  * @swagger
  * /api/auth/register/employee:
  *   post:
  *     tags: [Auth]
- *     summary: Register employee
+ *     summary: تسجيل موظف (الخطوة 1 — يرسل OTP)
  *     security: []
  *     requestBody:
  *       required: true
@@ -22,20 +25,21 @@ const  {
  *           schema:
  *             $ref: '#/components/schemas/RegisterEmployeeRequest'
  *     responses:
- *       201:
- *         description: Success
+ *       200:
+ *         description: تم إرسال OTP
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               $ref: '#/components/schemas/OtpSendResponse'
  */
 router.post('/register/employee', registerEmployeeUser)
- /**
+
+/**
  * @swagger
  * /api/auth/register/citizen:
  *   post:
  *     tags: [Auth]
- *     summary: Register citizen
+ *     summary: تسجيل مواطن (الخطوة 1 — يرسل OTP)
  *     security: []
  *     requestBody:
  *       required: true
@@ -44,22 +48,44 @@ router.post('/register/employee', registerEmployeeUser)
  *           schema:
  *             $ref: '#/components/schemas/RegisterCitizenRequest'
  *     responses:
- *       201:
- *         description: Success
+ *       200:
+ *         description: تم إرسال OTP
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               $ref: '#/components/schemas/OtpSendResponse'
  */
-router.post('/register/citizen',registerCitizenUser)
+router.post('/register/citizen', registerCitizenUser)
 
-// login
+/**
+ * @swagger
+ * /api/auth/verify-otp/register:
+ *   post:
+ *     tags: [Auth]
+ *     summary: التحقق من OTP لإتمام التسجيل (الخطوة 2)
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VerifyOtpRequest'
+ *     responses:
+ *       201:
+ *         description: تم تفعيل الحساب وإرجاع الـ token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VerifyRegisterOtpResponse'
+ */
+router.post('/verify-otp/register', verifyRegisterOtpUser)
+
 /**
  * @swagger
  * /api/auth/login:
  *   post:
  *     tags: [Auth]
- *     summary: Login user
+ *     summary: تسجيل الدخول (الخطوة 1 — يرسل OTP)
  *     security: []
  *     requestBody:
  *       required: true
@@ -69,12 +95,35 @@ router.post('/register/citizen',registerCitizenUser)
  *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
- *         description: Success
+ *         description: تم إرسال OTP
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               $ref: '#/components/schemas/OtpSendResponse'
  */
 router.post('/login', loginUser)
+
+/**
+ * @swagger
+ * /api/auth/verify-otp/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: التحقق من OTP لإتمام تسجيل الدخول (الخطوة 2)
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/VerifyOtpRequest'
+ *     responses:
+ *       200:
+ *         description: تم تسجيل الدخول وإرجاع الـ token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VerifyLoginOtpResponse'
+ */
+router.post('/verify-otp/login', verifyLoginOtpUser)
 
 module.exports = router

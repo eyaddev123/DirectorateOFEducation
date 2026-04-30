@@ -17,6 +17,7 @@ const swaggerOptions = {
       }
     ],
     tags: [
+      { name: 'Auth', description: 'المصادقة وإدارة الحسابات (Authentication)' },
       { name: 'Calculation', description: 'العمليات الحسابية (calculations)' },
       { name: 'Field', description: 'إدارة الحقول (Fields)' },
       { name: 'File', description: 'إدارة الملفات (Files)' },
@@ -110,6 +111,91 @@ const swaggerOptions = {
               type: 'array',
               items: { type: 'integer' },
               example: [1, 2]
+            }
+          }
+        },
+
+        // ======================== OTP ==========================
+
+        OtpSendResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                session_id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                },
+                message: {
+                  type: 'string',
+                  example: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.'
+                }
+              }
+            }
+          }
+        },
+
+        VerifyOtpRequest: {
+          type: 'object',
+          required: ['session_id', 'otp'],
+          properties: {
+            session_id: {
+              type: 'string',
+              format: 'uuid',
+              example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            },
+            otp: {
+              type: 'string',
+              minLength: 6,
+              maxLength: 6,
+              pattern: '^[0-9]{6}$',
+              example: '482931'
+            }
+          }
+        },
+
+        VerifyRegisterOtpResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                token: {
+                  type: 'string',
+                  example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6...'
+                },
+                user: { $ref: '#/components/schemas/User' },
+                message: {
+                  type: 'string',
+                  example: 'تم تفعيل الحساب بنجاح'
+                }
+              }
+            }
+          }
+        },
+
+        VerifyLoginOtpResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                token: {
+                  type: 'string',
+                  example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6...'
+                },
+                user: { $ref: '#/components/schemas/User' },
+                roles: {
+                  type: 'array',
+                  items: { type: 'integer' },
+                  example: [1, 2]
+                }
+              }
             }
           }
         },

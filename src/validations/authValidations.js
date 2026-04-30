@@ -110,8 +110,23 @@ function validateLogin (data) {
   })
 }
 
+// ===========================================
+// validate verify OTP
+// ===========================================
+function validateVerifyOtp(data) {
+  const schema = Joi.object({
+    session_id: Joi.string().uuid().required(),
+    otp: Joi.string().length(6).pattern(/^\d+$/).required().messages({
+      'string.length': 'otp must be 6 digits',
+      'string.pattern.base': 'otp must contain digits only'
+    })
+  })
+  return schema.validate(data, { abortEarly: false })
+}
+
 module.exports = {
   validateRegisterEmp,
   validateRegisterCitizen,
-  validateLogin
+  validateLogin,
+  validateVerifyOtp,
 }
