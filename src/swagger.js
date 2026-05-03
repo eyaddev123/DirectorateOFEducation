@@ -41,6 +41,10 @@ const swaggerOptions = {
       {
         name: 'Department',
         description: 'إدارة الأقسام (Departments)'
+      },
+      {
+        name: 'Role',
+        description: 'إدارة الأدوار وربطها بالمؤسسات والأقسام (Roles)'
       }
     ],
     components: {
@@ -841,6 +845,145 @@ const swaggerOptions = {
             message: {
               type: 'string',
               example: 'تم حذف القسم بنجاح'
+            },
+            data: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer', example: 1 }
+              }
+            }
+          }
+        },
+
+        // ======================== Role ==========================
+        RoleTemplate: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            name: { type: 'string', example: 'مدير دائرة' },
+            code: { type: 'string', example: 'DEPARTMENT_DIRECTOR' },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+
+        OrgDeptRole: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            role_id: { type: 'integer', example: 1 },
+            organization_id: { type: 'integer', example: 1 },
+            department_id: { type: 'integer', example: 2 },
+            parent_id: { type: 'integer', nullable: true, example: null },
+            is_active: { type: 'boolean', example: true },
+            camunda_group_key: {
+              type: 'string',
+              example: 'DEPARTMENT_DIRECTOR__ORG1__DEPT2'
+            },
+            role: { $ref: '#/components/schemas/RoleTemplate' },
+            organization: { $ref: '#/components/schemas/Organization' },
+            department: { $ref: '#/components/schemas/Department' },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+
+        RoleCreate: {
+          type: 'object',
+          required: ['name', 'code', 'organization_id', 'department_id'],
+          properties: {
+            name: {
+              type: 'string',
+              example: 'مدير دائرة',
+              minLength: 2,
+              maxLength: 100
+            },
+            code: {
+              type: 'string',
+              example: 'DEPARTMENT_DIRECTOR',
+              minLength: 2,
+              maxLength: 100,
+              pattern: '^[A-Z0-9_]+$'
+            },
+            organization_id: {
+              type: 'integer',
+              example: 1
+            },
+            department_id: {
+              type: 'integer',
+              example: 2
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: null,
+              description: 'معرّف الدور الأب من organization_department_roles'
+            },
+            is_active: {
+              type: 'boolean',
+              example: true
+            }
+          }
+        },
+
+        RoleUpdate: {
+          type: 'object',
+          minProperties: 1,
+          properties: {
+            organization_id: {
+              type: 'integer',
+              example: 2
+            },
+            department_id: {
+              type: 'integer',
+              example: 3
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: 5
+            },
+            is_active: {
+              type: 'boolean',
+              example: false
+            }
+          }
+        },
+
+        RoleEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم إنشاء الدور بنجاح'
+            },
+            data: { $ref: '#/components/schemas/OrgDeptRole' }
+          }
+        },
+
+        RoleListEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/OrgDeptRole' }
+            }
+          }
+        },
+
+        RoleDeleteEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم حذف الدور بنجاح'
             },
             data: {
               type: 'object',
