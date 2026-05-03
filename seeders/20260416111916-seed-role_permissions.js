@@ -24,6 +24,10 @@ module.exports = {
     const data = [
       {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.admin_register_employee
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.TYPETPROCESS_CREATE
       },
       {

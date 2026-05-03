@@ -11,13 +11,19 @@ const {
   verifyLoginOtpUser,
 } = require('../controllers/AuthController')
 
+const { authMiddleware, authorize } = require('../middleware/authMiddleware')
+
 /**
  * @swagger
  * /api/auth/register/employee:
  *   post:
  *     tags: [Auth]
- *     summary: تسجيل موظف (الخطوة 1 — يرسل OTP)
- *     security: []
+ *     summary: إنشاء حساب موظف (الفريق التقني فقط)
+ *     description: |
+ *       ينشئ حساب موظف مفعّل مباشرة بدون OTP وبدون JWT.
+ *       يُرجع userName و password ليُسلَّموا للموظف.
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -26,13 +32,18 @@ const {
  *             $ref: '#/components/schemas/RegisterEmployeeRequest'
  *     responses:
  *       200:
- *         description: تم إرسال OTP
+ *         description: تم إنشاء حساب الموظف
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/OtpSendResponse'
+ *               $ref: '#/components/schemas/RegisterEmployeeResponse'
  */
-router.post('/register/employee', registerEmployeeUser)
+router.post(
+  '/register/employee',
+  authMiddleware,
+  authorize('admin_register_employee'),
+  registerEmployeeUser
+)
 
 /**
  * @swagger

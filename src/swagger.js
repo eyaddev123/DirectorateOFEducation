@@ -100,6 +100,24 @@ const swaggerOptions = {
           }
         },
 
+        RegisterEmployeeResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                userName: { type: 'string', example: 'john_doe' },
+                password: { type: 'string', example: '123456' },
+                message: {
+                  type: 'string',
+                  example: 'تم إنشاء حساب الموظف بنجاح. سلّم بيانات الدخول للموظف.'
+                }
+              }
+            }
+          }
+        },
+
         RegisterCitizenRequest: {
           type: 'object',
           required: ['userName', 'email', 'password', 'phone_number'],

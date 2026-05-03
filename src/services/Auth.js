@@ -54,7 +54,7 @@ await sendSms(phone, `رمز التحقق : ${otp}\nصالح لمدة ${OTP_TTL_
 return session_id
 }
 
-// ================== REGISTER EMPLOYEE — Step 1 ===================
+// ================== REGISTER EMPLOYEE (Tech team only) ===================
 async function registerEmployee(userData) {
   const { error } = validateRegisterEmp(userData)
   if (error) throw new Error(error.details.map(d => d.message).join(' | '))
@@ -75,13 +75,12 @@ async function registerEmployee(userData) {
 
   const hashedPassword = await bcrypt.hash(userData.password, 10)
 
-  // إنشاء المستخدم غير مفعّل حتى يتحقق من رقمه
   const user = await User.create({
     userName: userData.userName,
     email: userData.email,
     phone_number: userData.phone_number,
     password: hashedPassword,
-    is_active: false,
+    is_active: true,
   })
 
   const assignments = userData.organization_department_role_ids.map(roleId => ({
@@ -90,11 +89,10 @@ async function registerEmployee(userData) {
   }))
   await UserRoleAssignment.bulkCreate(assignments)
 
-  const session_id = await saveAndSendOtp(user.id, userData.phone_number)
-
   return {
-    session_id,
-    message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
+    userName: userData.userName,
+    password: userData.password,
+    message: 'تم إنشاء حساب الموظف بنجاح. سلّم بيانات الدخول للموظف.',
   }
 }
 
