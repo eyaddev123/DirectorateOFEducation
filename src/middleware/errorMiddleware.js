@@ -1,4 +1,4 @@
-const ApiResponder = require('../utils/ApiResponder');
+const ApiResponder = require("../utils/apiResponder");
 
 const errorHandler = (err, req, res, next) => {
   console.error(err.stack);
