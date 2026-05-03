@@ -33,6 +33,38 @@ module.exports = {
       {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.TYPETPROCESS_VIEW
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.ORGANIZATION_CREATE
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.ORGANIZATION_UPDATE
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.ORGANIZATION_DELETE
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.ORGANIZATION_VIEW
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.DEPARTMENT_CREATE
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.DEPARTMENT_UPDATE
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.DEPARTMENT_DELETE
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.DEPARTMENT_VIEW
       }
     ]
 

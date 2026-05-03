@@ -22,4 +22,8 @@ const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 const typeProcessRoutes = require('./routes/typeProcess');
 app.use('/api/typeProcess', typeProcessRoutes);
+const organizationRoutes = require('./routes/organization');
+app.use('/api/organization', organizationRoutes);
+const departmentRoutes = require('./routes/department');
+app.use('/api/department', departmentRoutes);
 module.exports = app;
