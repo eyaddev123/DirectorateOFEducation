@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 // const nodemailer = require('nodemailer')
+
 const { v4: uuidv4 } = require('uuid') // ⬅️ استيراد UUID
 const {
   User,
@@ -126,57 +127,75 @@ async function registerEmployee(userData) {
 
 // ================== REGISTER CITIZEN ===================
 async function registerCitizen(userData) {
-  const { error } = validateRegisterCitizen(userData)
-  if (error) {
-    throw new Error(error.details.map(d => d.message).join(', '))
-  }
 
-  const existingUser = await User.findOne({
-    where: { email: userData.email }
-  })
-  if (existingUser) {
-    throw new Error('Email already exists')
-  }
+  const sequelize = User.sequelize
 
-  // ✅ التصحيح هنا
-  const orgDeptRole = await OrgDeptRole.findOne({
-    include: [
-      {
-        model: Role,
-        as: 'role',
-        where: { code: 'CITIZEN' }
-      }
-    ]
-  })
+  const transaction = await sequelize.transaction()
 
-  if (!orgDeptRole) {
-    throw new Error('CITIZEN role not found')
-  }
+  try {
 
-  const hashedPassword = await bcrypt.hash(userData.password, 10)
+    const { error } = validateRegisterCitizen(userData)
 
-  const inputUserDTO = new RegisterCitizenInputDTO({
-    ...userData,
-    password: hashedPassword
-  })
+    if (error) {
+      throw new Error(error.details.map(d => d.message).join(', '))
+    }
 
-  const user = await User.create({ ...inputUserDTO })
+    const existingUser = await User.findOne({
+      where: { email: userData.email },
+      transaction
+    })
 
-  const roleAssign = await UserRoleAssignment.create({
-    user_id: user.id,
-    organization_department_roles_id: orgDeptRole.id
-  })
+    if (existingUser) {
+      throw new Error('Email already exists')
+    }
 
-  const token = jwt.sign(
-    { id: user.id },
-    JWT_SECRET,
-    { expiresIn: '30d' }
-  )
+    const orgDeptRole = await OrgDeptRole.findOne({
+      where: {
+        camunda_group_key: 'CITIZEN'
+      },
+      transaction
+    })
 
-  return {
-    token,
-    user: new RegisterCitizenOutputDTO(user),
-    role_code: CITIZEN
+    if (!orgDeptRole) {
+      throw new Error('CITIZEN role not found')
+    }
+
+    const hashedPassword = await bcrypt.hash(userData.password, 10)
+
+    const inputUserDTO = new RegisterCitizenInputDTO({
+      ...userData,
+      password: hashedPassword
+    })
+
+    const user = await User.create(
+      { ...inputUserDTO },
+      { transaction }
+    )
+
+    await UserRoleAssignment.create({
+      user_id: user.id,
+      organization_department_roles_id: orgDeptRole.id
+    }, { transaction })
+
+    const token = jwt.sign(
+      { id: user.id },
+      JWT_SECRET,
+      { expiresIn: '30d' }
+    )
+
+    await transaction.commit()
+
+    return {
+      token,
+      user: new RegisterCitizenOutputDTO(user),
+      role_code: 'CITIZEN'
+    }
+
+  } catch (error) {
+
+    await transaction.rollback()
+
+    throw error
   }
 }
 //=================== login  ================//

@@ -11,10 +11,7 @@ module.exports = (sequelize, DataTypes) => {
         as: 'organization_roles'
       })
 
-      Role.hasMany(models.StageAssignment, {
-        foreignKey: 'role_id',
-        as: 'stage_assignments'
-      })
+
     }
   }
 

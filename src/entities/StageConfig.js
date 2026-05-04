@@ -1,16 +1,14 @@
-'use strict';
+'use strict'
 
 module.exports = (sequelize, DataTypes) => {
   class StageConfig extends sequelize.Sequelize.Model {
-    static associate(models) {
-
+    static associate (models) {
       StageConfig.belongsTo(models.Stage, {
         foreignKey: 'stage_id',
         as: 'stage',
         onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      });
-
+        onUpdate: 'CASCADE'
+      })
     }
   }
 
@@ -18,42 +16,25 @@ module.exports = (sequelize, DataTypes) => {
     {
       stage_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
-      },
-
-      type: {
-        type: DataTypes.ENUM(
-          'fields',
-          'files',
-          'rules',
-          'calculations',
-          'document',
-          'ui',
-          'transitions'
-        ),
-        allowNull: false,
+        allowNull: false
       },
 
       config_json: {
         type: DataTypes.JSON,
-        allowNull: false,
+        allowNull: false
       },
 
-      priority: {
-        type: DataTypes.INTEGER,
-        defaultValue: 1,
-      },
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
+        defaultValue: DataTypes.NOW
       },
 
       updated_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
+        defaultValue: DataTypes.NOW
+      }
     },
     {
       sequelize,
@@ -62,9 +43,9 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       underscored: true,
       createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      updatedAt: 'updated_at'
     }
-  );
+  )
 
-  return StageConfig;
-};
+  return StageConfig
+}

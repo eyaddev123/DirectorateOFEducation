@@ -27,11 +27,10 @@ const ValidateUpdateFile = (data) => {
     file_type: Joi.string()
       .valid(...FILE_TYPES)
       .optional(),
-
     type: Joi.string()
       .valid(...TYPE_FILE_ENUM)
       .optional(),
-  }).min(1);
+  }).min(1)
 
   return schema.validate(data);
 };

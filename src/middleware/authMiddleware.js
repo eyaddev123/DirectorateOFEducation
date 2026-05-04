@@ -86,7 +86,7 @@ function authorize(requiredPermission) {
       if (!roleIds.length) {
         return res.status(403).json({ message: 'No role IDs found' })
       }
-
+ 
       // ================= STEP 4 =================
       const rolePermissions = await RolePermission.findAll({
         where: {

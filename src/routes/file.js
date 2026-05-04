@@ -5,12 +5,14 @@ const router = express.Router()
 const {
  createFile,
  updateFile,
- getAllFile
-} = require('../controllers/Files')
+ getAllFile,
+ getOneActiveFile
+} = require('../controllers/FilesController')
+const { authMiddleware ,authorize } = require('../middleware/authMiddleware')
 
 /**
  * @swagger
- * /files:
+ * /api/files:
  *   get:
  *     summary: جلب كل الملفات
  *     tags: [File]
@@ -25,11 +27,11 @@ const {
  *               $ref: '#/components/schemas/FileListEnvelope'
  */
 
-router.get('/', getAllFile)
+router.get('/', authMiddleware, authorize('FILE_READ'), getAllFile)
 
 /**
  * @swagger
- * /files:
+ * /api/files:
  *   post:
  *     summary: إنشاء ملف جديد
  *     tags: [File]
@@ -49,11 +51,11 @@ router.get('/', getAllFile)
  *             schema:
  *               $ref: '#/components/schemas/FileEnvelope'
  */
-router.post('/', createFile)
+router.post('/', authMiddleware, authorize('FILE_CREATE'), createFile)
 
 /**
  * @swagger
- * /files/{id}:
+ * /api/files/{id}:
  *   put:
  *     summary: تعديل ملف
  *     tags: [File]
@@ -80,6 +82,36 @@ router.post('/', createFile)
  *             schema:
  *               $ref: '#/components/schemas/FileEnvelope'
  */
-router.put('/:id', updateFile)
+router.put('/:id', authMiddleware, authorize('FILE_UPDATE'), updateFile)
 
+/**
+ * @swagger
+ * /api/files/{id}:
+ *   get:
+ *     summary: Get one active file
+ *     tags: [File]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *
+ *     responses:
+ *       200:
+ *         description: تم جلب الملف بنجاح
+ *
+ *       404:
+ *         description: الملف غير موجود
+ */
+router.get(
+  '/:id',
+  authMiddleware,
+  authorize('GET_ONE_FILE'),
+  getOneActiveFile
+)
 module.exports = router

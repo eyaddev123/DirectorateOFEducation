@@ -30,11 +30,6 @@ module.exports = {
         onDelete: 'CASCADE'
       },
 
-      is_active: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: true
-      },
-
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,

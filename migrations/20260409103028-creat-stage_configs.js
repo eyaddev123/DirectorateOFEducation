@@ -9,20 +9,19 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
+      stage_id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        references: {
+          model: 'stages',
+          key: 'id'
+        },
+        onDelete: 'CASCADE'
+      },
 
       config_json: {
         type: Sequelize.JSON,
         allowNull: false
-      },
-
-      priority: {
-        type: Sequelize.INTEGER,
-        defaultValue: 1
-      },
-
-      is_active: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: true
       },
 
       created_at: {

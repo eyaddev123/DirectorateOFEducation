@@ -2,18 +2,43 @@ const express = require('express')
 const router = express.Router()
 
 const {
-  runStageController,
-  createProcessInstance,
-  getProcessInstance
-} = require('../controllers/processInstance.controller')
+  startProcessController,
+} = require('../controllers/ProcessInstanceController')
+const { authMiddleware ,authorize } = require('../middleware/authMiddleware')
 
 // إنشاء معاملة
-router.post('/', createProcessInstance)
+/**
+ * @swagger
+ * /process-instances/{id}/start:
+ *   post:
+ *     summary: Start a process instance
+ *     tags: [Process Instance]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Process Definition ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Process instance started successfully
+ *       400:
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ */
+router.post(
+  '/process-instances/:id/start',
+  authMiddleware,
+  authorize('PROCESS_START'),
+  startProcessController
+)
 
-// تشغيل المرحلة الحالية
-router.post('/:id/run', runStageController)
-
-// جلب حالة المعاملة
-router.get('/:id', getProcessInstance)
 
 module.exports = router

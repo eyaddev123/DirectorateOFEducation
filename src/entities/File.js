@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
 
+      version: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1
+      },
     
       type: {
         type: DataTypes.ENUM(
@@ -32,7 +36,10 @@ module.exports = (sequelize, DataTypes) => {
         ),
         allowNull: false,
       },
-
+         is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,

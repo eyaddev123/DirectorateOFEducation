@@ -31,48 +31,112 @@ async function createFileService (FileData) {
 
 
 //////=============================================  update File ============================== : 
-async function updateFileService (FileData, FileId) {
+async function updateFileService(FileData, FileId) {
 
   const id = parseInt(FileId, 10)
+
   if (!Number.isInteger(id) || id < 1) {
     throw new Error('معرّف الملف غير صالح')
   }
 
-  const { error } = ValidateUpdateFile({ ...FileData })
-  if (error) throw new Error(error.details[0].message)
+  // =========================================
+  // VALIDATION
+  // =========================================
+  const { error } = ValidateUpdateFile({
+    ...FileData
+  })
 
-  const file = await File.findByPk(id)
-  if (!file) {
+  if (error) {
+    throw new Error(error.details[0].message)
+  }
+
+  // =========================================
+  // GET CURRENT FILE
+  // =========================================
+  const oldFile = await File.findByPk(id)
+
+  if (!oldFile) {
     const err = new Error('الملف غير موجودة')
     err.statusCode = 404
     throw err
   }
 
-  const payload = {}
-  if (FileData.file_name !== undefined) payload.file_name = FileData.file_name
-  if (FileData.file_type !== undefined) payload.file_type = FileData.file_type
-  if (FileData.type !== undefined) {
-    payload.type = FileData.type
-  }
+  // =========================================
+  // DEACTIVATE OLD VERSION
+  // =========================================
+  await oldFile.update({
+    is_active: false
+  })
 
-  await file.update(payload)
-  await file.reload()
+  // =========================================
+  // CREATE NEW VERSION
+  // =========================================
+  const newFile = await File.create({
 
-  return new FileOutputDTO(file)
+    file_name:
+      FileData.file_name ?? oldFile.file_name,
+
+    file_type:
+      FileData.file_type ?? oldFile.file_type,
+
+    type:
+      FileData.type ?? oldFile.type,
+
+    // 🔥 زيادة النسخة
+    version: oldFile.version + 1,
+
+    // النسخة الجديدة فعالة
+    is_active:
+      FileData.is_active ?? true
+  })
+
+  // =========================================
+  // RETURN DTO
+  // =========================================
+  return new FileOutputDTO(newFile)
 }
 
 /////============================== get all Files ==================================== : 
 async function getAllFilesService () {
   const rows = await File.findAll({
+        is_active: true,
+
     order: [['id', 'ASC']]
   })
   return rows.map(row => new FileOutputDTO(row))
 }
 
 
+// ======================================
+// GET ONE ACTIVE
+// =========================================
+const getOneActiveFileService = async id => {
+
+  const file =
+    await File.findOne({
+      where: {
+        id,
+        is_active: true
+      }
+    })
+
+  if (!file) {
+    throw new Error('هذا ملف غير موجود')
+  }
+
+  return {
+    message: 'تم جلب ملف بنجاح',
+    data: {
+      success: true,
+      file
+    }
+  }
+}
+
 
 module.exports = {
   createFileService,
   updateFileService,
-  getAllFilesService
+  getAllFilesService,
+  getOneActiveFileService
 }

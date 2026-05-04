@@ -25,9 +25,15 @@ module.exports = {
         allowNull: false
       },
 
+      auth_type:{
+        type: Sequelize.ENUM(
+        'AUTH','NOAUTH'
+        ),
+        allowNull: false,
+      },
       code: {
-        type: Sequelize.STRING,
-        allowNull: false
+       type: Sequelize.STRING,
+        allowNull: true
       },
 
       type: {
@@ -41,11 +47,6 @@ module.exports = {
       camunda_task_key: {
         type: Sequelize.STRING,
         allowNull: true
-      },
-
-      is_active: {
-        type: Sequelize.BOOLEAN,
-        defaultValue: true
       },
 
       created_at: {

@@ -22,13 +22,23 @@ module.exports = {
           'text',
           'date',
           'boolean',
-          'float'
+          'float',
+          'list'
         ),
         allowNull: false
       },
       list_json: {
         type: Sequelize.JSON,
         allowNull: true
+      },
+      is_active: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
+      },
+      
+      version: {
+        type: Sequelize.INTEGER,
+        defaultValue: 1
       },
       created_at: {
         allowNull: false,

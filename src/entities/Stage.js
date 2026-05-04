@@ -10,6 +10,11 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE'
       })
+
+      Stage.hasMany(models.StageAssignment, {
+        foreignKey: 'stage_id',
+        as: 'stage_assignments'
+      })
     }
   }
 
@@ -24,10 +29,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false
       },
-
+      auth_type: {
+        type: DataTypes.ENUM('AUTH', 'NOAUTH'),
+        allowNull: false
+      },
       code: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true
       },
 
       type: {

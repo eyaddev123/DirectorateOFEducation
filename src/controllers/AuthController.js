@@ -27,11 +27,11 @@ const registerCitizenUser = async (req, res) => {
   try {
     const result = await registerCitizen(req.body)
 
-    return res.status(201).json({
-      success: true,
-      message: 'Citizen registered successfully',
-      data: result
-    })
+      return res.status(201).json({
+        success: true,
+        message: 'Citizen registered successfully',
+        data: result
+      })
   } catch (err) {
     return res.status(400).json({
       success: false,

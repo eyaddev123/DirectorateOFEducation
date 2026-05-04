@@ -8,7 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'role',
         onDelete: 'CASCADE'
       })
-
+      OrgDeptRole.hasMany(models.StageAssignment, {
+        foreignKey: 'organization_department_roles_id',
+        as: 'stage_assignments'
+      })
       OrgDeptRole.belongsTo(models.Organization, {
         foreignKey: 'organization_id',
         as: 'organization',

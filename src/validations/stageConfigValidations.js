@@ -1,18 +1,41 @@
 const Joi = require('joi')
 
 const createStageConfigSchema = Joi.object({
-  stage_id: Joi.number().required(),
 
-  type: Joi.string().valid(
-    'fields',
-    'files',
-    'rules',
-    'document',
-  ).required(),
+  stages: Joi.array().items(
 
-  config_json: Joi.object().required(),
+    Joi.object({
 
-  priority: Joi.number().integer().min(1).optional()
+      stage_id: Joi.number().required(),
+
+      config_json: Joi.object().required(),
+
+      assignments: Joi.array().items(
+
+        Joi.object({
+
+      
+    organization_id: Joi.number()
+      .allow(null)
+      .required(),
+
+    department_id: Joi.number()
+      .allow(null)
+      .required(),
+
+    role_id: Joi.number()
+      .required()
+
+        })
+
+      ).optional()
+
+    })
+
+  ).required()
+
 })
 
-module.exports = { createStageConfigSchema }
+module.exports = {
+  createStageConfigSchema
+}

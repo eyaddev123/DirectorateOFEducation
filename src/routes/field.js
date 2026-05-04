@@ -2,84 +2,198 @@
 
 const express = require('express')
 const router = express.Router()
+
 const {
   createField,
   updateField,
-  getAllField
-} = require('../controllers/Field')
+  getAllField,
+  getOneActiveField
+} = require('../controllers/FieldController')
+
+const {
+  authMiddleware,
+  authorize
+} = require('../middleware/authMiddleware')
 
 /**
  * @swagger
- * /fields:
- *   get:
- *     summary: جلب كل الحقول
- *     tags: [Field]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: قائمة الحقول
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FieldListEnvelope'
+ * tags:
+ *   name: Field
+ *   description: Field Management APIs
  */
 
-router.get('/', getAllField)
-
 /**
  * @swagger
- * /fields:
- *   post:
- *     summary: إنشاء حقل جديد
+ * /api/fields:
+ *   get:
+ *     summary: Get all active fields
  *     tags: [Field]
  *     security:
  *       - bearerAuth: []
+ *
+ *     responses:
+ *       200:
+ *         description: تم جلب الحقول بنجاح
+ */
+router.get(
+  '/',
+  authMiddleware,
+  authorize('FIELD_READ'),
+  getAllField
+)
+
+/**
+ * @swagger
+ * /api/fields:
+ *   post:
+ *     summary: Create new field
+ *     tags: [Field]
+ *     security:
+ *       - bearerAuth: []
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/FieldCreate'
+ *             type: object
+ *             required:
+ *               - field_name
+ *               - field_type
+ *
+ *             properties:
+ *
+ *               field_name:
+ *                 type: string
+ *                 example: status
+ *
+ *               field_type:
+ *                 type: string
+ *                 enum:
+ *                   - string
+ *                   - int
+ *                   - text
+ *                   - date
+ *                   - boolean
+ *                   - float
+ *                   - list
+ *                 example: list
+ *
+ *               list_json:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example:
+ *                   - NEW
+ *                   - PENDING
+ *                   - DONE
+ *
  *     responses:
- *       200:
- *         description: تم الإنشاء بنجاح
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FieldEnvelope'
+ *       201:
+ *         description: تم إنشاء الحقل بنجاح
+ *
+ *       400:
+ *         description: خطأ في البيانات
  */
-router.post('/', createField)
+router.post(
+  '/',
+  authMiddleware,
+  authorize('FIELD_CREATE'),
+  createField
+)
 
 /**
  * @swagger
- * /fields/{id}:
+ * /api/fields/{id}:
  *   put:
- *     summary: تعديل حقل
+ *     summary: Update field
  *     tags: [Field]
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: integer
- *         description: معرف الحقل
+ *         example: 1
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/FieldUpdate'
+ *             type: object
+ *
+ *             properties:
+ *
+ *               field_name:
+ *                 type: string
+ *                 example: updated_status
+ *
+ *               field_type:
+ *                 type: string
+ *                 enum:
+ *                   - string
+ *                   - int
+ *                   - text
+ *                   - date
+ *                   - boolean
+ *                   - float
+ *                   - list
+ *
+ *               list_json:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example:
+ *                   - ACCEPTED
+ *                   - REJECTED
+ *
  *     responses:
  *       200:
- *         description: تم التعديل
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/FieldEnvelope'
+ *         description: تم تعديل الحقل بنجاح
+ *
+ *       404:
+ *         description: الحقل غير موجود
  */
-router.put('/:id', updateField)
+router.put(
+  '/:id',
+  authMiddleware,
+  authorize('FIELD_UPDATE'),
+  updateField
+)
+
+/**
+ * @swagger
+ * /api/fields/{id}:
+ *   get:
+ *     summary: Get one active field
+ *     tags: [Field]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *
+ *     responses:
+ *       200:
+ *         description: تم جلب الحقل بنجاح
+ *
+ *       404:
+ *         description: الحقل غير موجود
+ */
+router.get(
+  '/:id',
+  authMiddleware,
+  authorize('GET_ONE_FIELD'),
+  getOneActiveField
+)
 
 module.exports = router

@@ -22,12 +22,21 @@ module.exports = (sequelize, DataTypes) => {
       },
 
       field_type: {
-        type: DataTypes.ENUM('string', 'int', 'text', 'date', 'boolean', 'float'),
+        type: DataTypes.ENUM('string','int','text','date','boolean','float','list'),
         allowNull: false,
       },
       list_json: {
         type: DataTypes.JSON,
         allowNull: true
+      },
+      
+      version: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1
+      },
+        is_active: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
       },
       created_at: {
         type: DataTypes.DATE,

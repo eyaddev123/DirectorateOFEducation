@@ -5,7 +5,7 @@ const ValidateCreateField = (data) => {
     field_name: Joi.string().trim().min(2).max(100).required(),
 
     field_type: Joi.string()
-      .valid('string', 'number', 'text', 'date', 'boolean')
+      .valid('string','float', 'int', 'text', 'date', 'boolean','list')
       .required(),
 
     list_json: Joi.alternatives().try(
@@ -23,7 +23,7 @@ const ValidateUpdateField = (data) => {
     field_name: Joi.string().trim().min(2).max(100).optional(),
 
     field_type: Joi.string()
-      .valid('string', 'number', 'text', 'date', 'boolean')
+      .valid('string','float', 'int', 'text', 'date', 'boolean','list')
       .optional(),
 
     list_json: Joi.alternatives().try(
@@ -31,6 +31,7 @@ const ValidateUpdateField = (data) => {
       Joi.array(),
       Joi.allow('', null)
     ).optional(),
+  
   }).min(1); // لازم يكون في field واحد على الأقل
 
   return schema.validate(data);

@@ -1,154 +1,179 @@
 'use strict'
 
-const { StageConfig, Stage } = require('../entities')
-const { createStageConfigSchema } = require('../validations/stageConfigValidation')
-// شكل الtransitions {
-//   "transitions": [
-//     { "action": "approve", "next_stage": "stage_2" },
-//     { "action": "reject", "next_stage": "rejected" },
-//     { "action": "return", "next_stage": "stage_1" }
-//   ]
-// } 
-//الnext_stage هية نفسها ال code تبع ال stage 
+const { re } = require('mathjs')
+const {
+  StageConfig,
+  Stage,
+  StageAssignment,
+  OrgDeptRole,
+  ProcessDefinition
+} = require('../entities')
+const {
+  createStageConfigSchema
+} = require('../validations/stageConfigValidations')
 
-function validateStageConfig(stageType, configType) {
-const map = {
-  USER_TASK: ['fields', 'files', 'ui'],
-  APPROVAL: ['fields', 'ui'],
-  DOCUMENT: ['document'],
-  UPLOAD: ['files'],
-  DECISION: ['rules'],
-  NOTIFICATION: ['ui']
-}
-
-  if (!map[stageType].includes(configType)) {
-    throw new Error('هذا النوع غير مسموح لهذه المرحلة')
-  }
-}
-
-async function createStageConfigService(data) {
-
+async function createStageConfigService (data) {
   const { error } = createStageConfigSchema.validate(data)
   if (error) throw new Error(error.details[0].message)
 
-  // 1. جيب المرحلة
-  const stage = await Stage.findByPk(data.stage_id)
-  if (!stage) throw new Error('المرحلة غير موجودة')
+  const results = []
 
-  // 2. تحقق النوع
-  validateStageConfig(stage.type, data.type)
+  for (const item of data.stages) {
+    const stage = await Stage.findByPk(item.stage_id)
+    if (!stage) throw new Error(`Stage ${item.stage_id} غير موجود`)
 
-  // 3. منع تكرار
-  const exists = await StageConfig.findOne({
-    where: {
-      stage_id: data.stage_id,
-      type: data.type
+    const config = await StageConfig.create({
+      stage_id: item.stage_id,
+      config_json: item.config_json
+    })
+
+    let assignments = []
+
+if (stage.type === 'USER_TASK') {
+
+  const assignmentsData =
+    item.assignments || []
+
+  if (assignmentsData.length > 0) {
+
+    // =========================================
+    // GET organization_department_roles
+    // =========================================
+    const orgDeptRoles = []
+
+    for (const a of assignmentsData) {
+
+      const orgDeptRole =
+        await OrgDeptRole.findOne({
+          where: {
+            organization_id: a.organization_id,
+            department_id: a.department_id,
+            role_id: a.role_id,
+            is_active: true
+          }
+        })
+
+      if (!orgDeptRole) {
+        throw new Error(
+          `لم يتم العثور على role_id=${a.role_id}
+           ضمن organization=${a.organization_id}
+           department=${a.department_id}`
+        )
+      }
+
+      orgDeptRoles.push(orgDeptRole)
     }
-  })
 
-  if (exists) {
-    throw new Error('هذا النوع موجود مسبقاً لهذه المرحلة')
+    // =========================================
+    // EXISTING
+    // =========================================
+    const existing = await StageAssignment.findAll({
+      where: {
+        stage_id: stage.id
+      }
+    })
+
+    const existingSet = new Set(
+      existing.map(
+        e => e.organization_department_roles_id
+      )
+    )
+
+    // =========================================
+    // FILTER NEW ONLY
+    // =========================================
+    const toInsert = orgDeptRoles
+
+      .filter(
+        r => !existingSet.has(r.id)
+      )
+
+      .map(r => ({
+        stage_id: stage.id,
+        organization_department_roles_id: r.id
+      }))
+
+    // =========================================
+    // BULK CREATE
+    // =========================================
+    if (toInsert.length > 0) {
+
+      assignments =
+        await StageAssignment.bulkCreate(toInsert)
+    }
   }
-
-  // 🔥 4. تحقق transitions / rules
-  if (data.type === 'transitions') {
-    await validateTransitions(stage, data.config_json)
-  }
-
-  if (data.type === 'rules') {
-    await validateRules(stage, data.config_json)
-  }
-
-  // 5. إنشاء
-  const config = await StageConfig.create({
-    stage_id: data.stage_id,
-    type: data.type,
-    config_json: data.config_json,
-    priority: data.priority || 1,
-  })
-
-  return config
 }
-async function validateTransitions(stage, configJson) {
 
-  const transitions = configJson.transitions
-
-  if (!Array.isArray(transitions) || !transitions.length) {
-    throw new Error('transitions يجب أن تحتوي على عناصر')
+    results.push({
+      stage_id: stage.id,
+      config: config.config_json,
+      assignments: assignments.map(a => a.organization_department_roles_id)
+    })
   }
 
-  // =========================
-  // 🔥 BULK FETCH STAGES ONCE
-  // =========================
-  const stages = await Stage.findAll({
+  return {
+    message: 'Stages configured successfully',
+    data: results
+  }
+}
+// ========================== get config_json for process =========================
+async function getConfig_json (processID) {
+  const Process = await ProcessDefinition.findByPk(processID)
+  if (!Process) {
+    return {
+      message: 'لم يتم ايجاد العملية',
+      data: {
+        success: false,
+        config_json: []
+      }
+    }
+  }
+  // 1. جيب أول stage AUTH (الأقدم)
+  const stage = await Stage.findOne({
     where: {
-      process_definition_id: stage.process_definition_id
+      process_definition_id: processID,
+      auth_type: 'AUTH'
     },
-    attributes: ['code']
+    order: [['id', 'ASC']]
   })
 
-  const validCodes = new Set(stages.map(s => s.code))
-
-  // =========================
-  // VALIDATION (NO DB CALLS)
-  // =========================
-  for (const t of transitions) {
-
-    if (!t.action) {
-      throw new Error('action مطلوب في transitions')
-    }
-
-    if (!t.next_stage) {
-      throw new Error('next_stage مطلوب')
-    }
-
-    if (!validCodes.has(t.next_stage)) {
-      throw new Error(`Stage غير موجود: ${t.next_stage}`)
-    }
-
-    if (t.next_stage === stage.code) {
-      throw new Error('لا يمكن الانتقال لنفس المرحلة')
+  if (!stage) {
+    return {
+      message: 'لا توجد مرحلة  لهذه العملية',
+      data: {
+        success: false,
+        config_json: []
+      }
     }
   }
-}
-async function validateRules(stage, configJson) {
 
-  const rules = configJson.rules
-
-  if (!Array.isArray(rules) || !rules.length) {
-    throw new Error('rules يجب أن تحتوي على عناصر')
-  }
-
-  // =========================
-  // 🔥 BULK FETCH STAGES ONCE
-  // =========================
-  const stages = await Stage.findAll({
+  // 2. جيب config
+  const stageConfig = await StageConfig.findOne({
     where: {
-      process_definition_id: stage.process_definition_id
-    },
-    attributes: ['code']
+      stage_id: stage.id
+    }
   })
 
-  const validCodes = new Set(stages.map(s => s.code))
-
-  // =========================
-  // VALIDATION (NO DB CALLS)
-  // =========================
-  for (const r of rules) {
-
-    if (!r.condition) {
-      throw new Error('condition مطلوب في rules')
+  if (!stageConfig) {
+    return {
+      message: 'لم نجد إعدادات للمرحلة',
+      data: {
+        success: false,
+        config_json: []
+      }
     }
+  }
 
-    if (!r.next_stage) {
-      throw new Error('next_stage مطلوب في rules')
-    }
-
-    if (!validCodes.has(r.next_stage)) {
-      throw new Error(`Stage غير موجود في rules: ${r.next_stage}`)
+  return {
+    message: 'تم جلب إعدادات العملية بنجاح !',
+    data: {
+      success: true,
+      config_json: stageConfig.config_json
     }
   }
 }
 
-
-module.exports = { createStageConfigService }
+module.exports = {
+  createStageConfigService,
+  getConfig_json
+}

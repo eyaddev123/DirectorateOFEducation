@@ -1,40 +1,74 @@
-const asyncHandler = require('../middleware/asyncHandler')
-const { createProcessDefinitionService , deployProcessDefinitionService , startProcessInstanceService} = require('../services/processDefinition')
+'use strict'
 
+const asyncHandler = require('../middleware/asyncHandler')
+
+const {
+  createProcessDefinitionService,
+  setupProcessAfterCreation,
+  getAuthProcesses
+} = require('../services/processDefinition')
+
+///// ============================== create new Process Definition ====================================
 
 const createProcessDefinition = asyncHandler(async (req, res) => {
-  const result = await createProcessDefinitionService(req.body)
+  try {
+    const data = {
+      name: req.body.name,
+      code: req.body.code,
+      type_trans_id: req.body.type_trans_id,
+      organization_id: req.body.organization_id,
+      priority: req.body.priority,
+      start_date: req.body.start_date,
+      end_date: req.body.end_date,
+      filePath: req.file?.path
+    }
 
-  res.status(201).json({
-    message: 'تم إنشاء تعريف المعاملة بنجاح',
-    data: result
-  })
+    if (!data.filePath) throw new Error('ملف BPMN مطلوب !')
+
+    const process = await createProcessDefinitionService(data)
+    const processID = process.id
+    console.log('rawan')
+    const setup = await setupProcessAfterCreation(processID)
+
+    return res.status(200).json({
+      message: 'تم إنشاء العملية بنجاح',
+      data: {
+        success: true,
+
+        process,
+
+        stages: setup || []
+      }
+    })
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    })
+  }
 })
 
+///// ============================== get AUTH processes ====================================
 
+const getAuthProcessesController = asyncHandler(async (req, res) => {
+  try {
+    const typeTransID = req.params.id
+    const userId = req.user.id
+    const result = await getAuthProcesses(typeTransID, userId)
 
-const deployProcessDefinition = asyncHandler(async (req, res) => {
-  const { id } = req.params
-
-  const result = await deployProcessDefinitionService(id)
-
-  res.status(200).json({
-    message: 'تم نشر العملية (Deploy) بنجاح',
-    data: result
-  })
+    return res.status(200).json({
+      message: result.message,
+      data: result.data
+    })
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    })
+  }
 })
 
-
-
-
-
-const startProcessInstance = asyncHandler(async (req, res) => {
-  const result = await startProcessInstanceService(req.body)
-
-  res.status(201).json({
-    message: 'تم بدء المعاملة بنجاح',
-    data: result
-  })
-})
-
-module.exports = { createProcessDefinition , deployProcessDefinition , startProcessInstance}
+module.exports = {
+  createProcessDefinition,
+  getAuthProcessesController
+}
