@@ -17,6 +17,7 @@ const swaggerOptions = {
       }
     ],
     tags: [
+      { name: 'Auth', description: 'المصادقة وإدارة الحسابات (Authentication)' },
       { name: 'Calculation', description: 'العمليات الحسابية (calculations)' },
       { name: 'Field', description: 'إدارة الحقول (Fields)' },
       { name: 'File', description: 'إدارة الملفات (Files)' },
@@ -24,6 +25,18 @@ const swaggerOptions = {
       {
         name: 'TypeProcess',
         description: 'أنواع العمليات (Type Process)'
+      },
+      {
+        name: 'Organization',
+        description: 'إدارة المؤسسات (Organizations)'
+      },
+      {
+        name: 'Department',
+        description: 'إدارة الأقسام (Departments)'
+      },
+      {
+        name: 'Role',
+        description: 'إدارة الأدوار وربطها بالمؤسسات والأقسام (Roles)'
       }
     ],
     components: {
@@ -63,18 +76,47 @@ const swaggerOptions = {
             'email',
             'password',
             'phone_number',
-            'organization_department_role_ids'
+            'organization_id',
+            'department_id',
+            'role_id'
           ],
           properties: {
             userName: { type: 'string', example: 'john_doe' },
             email: { type: 'string', example: 'john@gmail.com' },
             phone_number: { type: 'string', example: '0954263536' },
-            password: { type: 'string', example: '123456' },
-            is_active: { type: 'boolean', example: true },
-            organization_department_role_ids: {
-              type: 'array',
-              items: { type: 'integer' },
-              example: [1, 2, 3]
+            password: { type: 'string', example: 'pass1234' },
+            organization_id: {
+              type: 'integer',
+              example: 1,
+              description: 'معرف المؤسسة'
+            },
+            department_id: {
+              type: 'integer',
+              example: 5,
+              description: 'معرف آخر قسم في الهرمية (مثل: شعبة التدقيق داخل قسم المحاسبة)'
+            },
+            role_id: {
+              type: 'integer',
+              example: 2,
+              description: 'معرف الدور (Role)'
+            }
+          }
+        },
+
+        RegisterEmployeeResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                userName: { type: 'string', example: 'john_doe' },
+                password: { type: 'string', example: '123456' },
+                message: {
+                  type: 'string',
+                  example: 'تم إنشاء حساب الموظف بنجاح. سلّم بيانات الدخول للموظف.'
+                }
+              }
             }
           }
         },
@@ -102,6 +144,91 @@ const swaggerOptions = {
               type: 'array',
               items: { type: 'integer' },
               example: [1, 2]
+            }
+          }
+        },
+
+        // ======================== OTP ==========================
+
+        OtpSendResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                session_id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                },
+                message: {
+                  type: 'string',
+                  example: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.'
+                }
+              }
+            }
+          }
+        },
+
+        VerifyOtpRequest: {
+          type: 'object',
+          required: ['session_id', 'otp'],
+          properties: {
+            session_id: {
+              type: 'string',
+              format: 'uuid',
+              example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            },
+            otp: {
+              type: 'string',
+              minLength: 6,
+              maxLength: 6,
+              pattern: '^[0-9]{6}$',
+              example: '482931'
+            }
+          }
+        },
+
+        VerifyRegisterOtpResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                token: {
+                  type: 'string',
+                  example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6...'
+                },
+                user: { $ref: '#/components/schemas/User' },
+                message: {
+                  type: 'string',
+                  example: 'تم تفعيل الحساب بنجاح'
+                }
+              }
+            }
+          }
+        },
+
+        VerifyLoginOtpResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+              type: 'object',
+              properties: {
+                token: {
+                  type: 'string',
+                  example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6...'
+                },
+                user: { $ref: '#/components/schemas/User' },
+                roles: {
+                  type: 'array',
+                  items: { type: 'integer' },
+                  example: [1, 2]
+                }
+              }
             }
           }
         },
@@ -373,6 +500,407 @@ const swaggerOptions = {
           }
         },
 
+        // ======================== Organization ==========================
+        Organization: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            name: { type: 'string', example: 'مديرية التربية - دمشق' },
+            parent_id: { type: 'integer', nullable: true, example: null },
+            location_id: { type: 'integer', nullable: true, example: 1 },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+
+        OrganizationCreate: {
+          type: 'object',
+          required: ['name'],
+          properties: {
+            name: {
+              type: 'string',
+              example: 'مديرية التربية - دمشق',
+              minLength: 2,
+              maxLength: 150
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: null
+            },
+            location_id: {
+              type: 'integer',
+              nullable: true,
+              example: 1
+            }
+          }
+        },
+
+        OrganizationUpdate: {
+          type: 'object',
+          minProperties: 1,
+          properties: {
+            name: {
+              type: 'string',
+              example: 'مديرية التربية - دمشق (محدث)',
+              minLength: 2,
+              maxLength: 150
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: 2
+            },
+            location_id: {
+              type: 'integer',
+              nullable: true,
+              example: 3
+            }
+          }
+        },
+
+        OrganizationEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم إنشاء المؤسسة بنجاح'
+            },
+            data: { $ref: '#/components/schemas/Organization' }
+          }
+        },
+
+        OrganizationListEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Organization' }
+            }
+          }
+        },
+
+        OrganizationDeleteEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم حذف المؤسسة بنجاح'
+            },
+            data: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer', example: 1 }
+              }
+            }
+          }
+        },
+
+        // ======================== Department ==========================
+        Department: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            name: { type: 'string', example: 'قسم الشؤون الإدارية' },
+            organization_id: { type: 'integer', example: 1 },
+            parent_id: { type: 'integer', nullable: true, example: null },
+            is_active: { type: 'boolean', example: true },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+
+        DepartmentCreate: {
+          type: 'object',
+          required: ['name', 'organization_id'],
+          properties: {
+            name: {
+              type: 'string',
+              example: 'قسم الشؤون الإدارية',
+              minLength: 2,
+              maxLength: 150
+            },
+            organization_id: {
+              type: 'integer',
+              example: 1
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: null
+            },
+            is_active: {
+              type: 'boolean',
+              example: true
+            }
+          }
+        },
+
+        DepartmentUpdate: {
+          type: 'object',
+          minProperties: 1,
+          properties: {
+            name: {
+              type: 'string',
+              example: 'قسم الشؤون الإدارية (محدث)',
+              minLength: 2,
+              maxLength: 150
+            },
+            organization_id: {
+              type: 'integer',
+              example: 2
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: 3
+            },
+            is_active: {
+              type: 'boolean',
+              example: false
+            }
+          }
+        },
+
+        DepartmentEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم إنشاء القسم بنجاح'
+            },
+            data: { $ref: '#/components/schemas/Department' }
+          }
+        },
+
+        DepartmentListEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Department' }
+            }
+          }
+        },
+
+        DepartmentDeleteEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم حذف القسم بنجاح'
+            },
+            data: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer', example: 1 }
+              }
+            }
+          }
+        },
+
+        DepartmentLeaf: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 3 },
+            name: {
+              type: 'string',
+              example: 'قسم المحاسبة\\شعبة التدقيق'
+            }
+          }
+        },
+
+        DepartmentLeavesEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/DepartmentLeaf' }
+            }
+          }
+        },
+
+        // ======================== Role ==========================
+        RoleTemplate: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            name: { type: 'string', example: 'مدير دائرة' },
+            code: { type: 'string', example: 'DEPARTMENT_DIRECTOR' },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+
+        OrgDeptRole: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 1 },
+            role_id: { type: 'integer', example: 1 },
+            organization_id: { type: 'integer', example: 1 },
+            department_id: { type: 'integer', example: 2 },
+            parent_id: { type: 'integer', nullable: true, example: null },
+            is_active: { type: 'boolean', example: true },
+            camunda_group_key: {
+              type: 'string',
+              example: 'DEPARTMENT_DIRECTOR__ORG1__DEPT2'
+            },
+            role: { $ref: '#/components/schemas/RoleTemplate' },
+            organization: { $ref: '#/components/schemas/Organization' },
+            department: { $ref: '#/components/schemas/Department' },
+            created_at: { type: 'string', format: 'date-time' },
+            updated_at: { type: 'string', format: 'date-time' }
+          }
+        },
+
+        RoleCreate: {
+          type: 'object',
+          required: ['name', 'code', 'organization_id', 'department_id'],
+          properties: {
+            name: {
+              type: 'string',
+              example: 'مدير دائرة',
+              minLength: 2,
+              maxLength: 100
+            },
+            code: {
+              type: 'string',
+              example: 'DEPARTMENT_DIRECTOR',
+              minLength: 2,
+              maxLength: 100,
+              pattern: '^[A-Z0-9_]+$'
+            },
+            organization_id: {
+              type: 'integer',
+              example: 1
+            },
+            department_id: {
+              type: 'integer',
+              example: 2
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: null,
+              description: 'معرّف الدور الأب من organization_department_roles'
+            },
+            is_active: {
+              type: 'boolean',
+              example: true
+            }
+          }
+        },
+
+        RoleUpdate: {
+          type: 'object',
+          minProperties: 1,
+          properties: {
+            organization_id: {
+              type: 'integer',
+              example: 2
+            },
+            department_id: {
+              type: 'integer',
+              example: 3
+            },
+            parent_id: {
+              type: 'integer',
+              nullable: true,
+              example: 5
+            },
+            is_active: {
+              type: 'boolean',
+              example: false
+            }
+          }
+        },
+
+        RoleEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم إنشاء الدور بنجاح'
+            },
+            data: { $ref: '#/components/schemas/OrgDeptRole' }
+          }
+        },
+
+        RoleListEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/OrgDeptRole' }
+            }
+          }
+        },
+
+        RoleDeleteEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم حذف الدور بنجاح'
+            },
+            data: {
+              type: 'object',
+              properties: {
+                id: { type: 'integer', example: 1 }
+              }
+            }
+          }
+        },
+
+        RoleByDepartmentItem: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 2 },
+            name: { type: 'string', example: 'مدير المحاسبة' },
+            code: { type: 'string', example: 'ACCOUNTING_MANAGER' }
+          }
+        },
+
+        RolesByDepartmentEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/RoleByDepartmentItem' }
+            }
+          }
+        }
       }
     }
   },

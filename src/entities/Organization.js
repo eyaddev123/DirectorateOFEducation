@@ -40,10 +40,10 @@ module.exports = (sequelize, DataTypes) => {
 
       parent_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: true,
       },
 
-      Location_id: {
+      location_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
       },

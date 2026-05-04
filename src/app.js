@@ -34,4 +34,10 @@ const fieldRoutes = require('./routes/field')
 app.use( '/api/fields',fieldRoutes)
 const fileRoutes = require('./routes/file')
 app.use( '/api/files',fileRoutes)
+const organizationRoutes = require('./routes/organization');
+app.use('/api/organization', organizationRoutes);
+const departmentRoutes = require('./routes/department');
+app.use('/api/department', departmentRoutes);
+const roleRoutes = require('./routes/role');
+app.use('/api/role', roleRoutes);
 module.exports = app;
