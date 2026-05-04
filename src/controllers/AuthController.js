@@ -3,7 +3,9 @@
 const {
   registerEmployee,
   registerCitizen,
-  login
+  verifyRegisterOtp,
+  login,
+  verifyLoginOtp,
 } = require("../services/Auth")
 
 // ================= REGISTER EMPLOYEE — Step 1 =================

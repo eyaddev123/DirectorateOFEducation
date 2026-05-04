@@ -144,7 +144,7 @@ async function registerCitizen(userData) {
     })
 
     const user = await User.create(
-      { ...inputUserDTO },
+      { ...inputUserDTO, is_active: false },
       { transaction }
     )
 
@@ -153,23 +153,24 @@ async function registerCitizen(userData) {
       organization_department_roles_id: orgDeptRole.id
     }, { transaction })
 
-    const token = jwt.sign(
-      { id: user.id },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    )
-
     await transaction.commit()
 
+    if (!user.phone_number) {
+      throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب')
+    }
+
+    const session_id = await saveAndSendOtp(user.id, user.phone_number)
+
     return {
-      token,
-      user: new RegisterCitizenOutputDTO(user),
-      role_code: 'CITIZEN'
+      session_id,
+      message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
     }
 
   } catch (error) {
 
-    await transaction.rollback()
+    if (!transaction.finished) {
+      await transaction.rollback()
+    }
 
     throw error
   }
@@ -196,6 +197,35 @@ async function login(userData) {
   return {
     session_id,
     message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
+  }
+}
+
+// ================== VERIFY REGISTER OTP — Step 2 ===================
+async function verifyRegisterOtp({ session_id, otp }) {
+  const { error } = validateVerifyOtp({ session_id, otp })
+  if (error) throw new Error(error.details.map(d => d.message).join(', '))
+
+  const record = await OtpCode.findOne({ where: { session_id } })
+  if (!record) throw new Error('session_id غير صحيح')
+  if (record.otp !== otp) throw new Error('رمز OTP غير صحيح')
+  if (new Date() > record.expires_at) {
+    await record.destroy()
+    throw new Error('رمز OTP منتهي الصلاحية')
+  }
+
+  const user = await User.findByPk(record.user_id)
+  if (!user) throw new Error('المستخدم غير موجود')
+
+  await user.update({ is_active: true })
+  await record.destroy()
+
+  const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '30d' })
+
+  return {
+    token,
+    user: new RegisterCitizenOutputDTO(user),
+    role_code: 'CITIZEN',
+    message: 'تم تفعيل الحساب بنجاح',
   }
 }
 
