@@ -2,7 +2,7 @@ const {
   registerEmployee,
   registerCitizen,
   login
-} = require('../services/auth')
+} = require("../services/Auth")
 
 // ================= REGISTER EMPLOYEE =================
 const registerEmployeeUser = async (req, res) => {
