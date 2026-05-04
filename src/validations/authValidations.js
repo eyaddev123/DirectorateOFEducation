@@ -35,12 +35,11 @@ function validateRegisterEmp (data) {
         'string.pattern.base': 'password must contain letters and numbers'
       }),
 
-    is_active: Joi.boolean().required(),
+    organization_id: Joi.number().integer().positive().required(),
 
-    organization_department_role_ids: Joi.array()
-      .items(Joi.number().integer().required())
-      .min(1)
-      .required()
+    department_id: Joi.number().integer().positive().required(),
+
+    role_id: Joi.number().integer().positive().required()
   })
 
   return schema.validate(data, {

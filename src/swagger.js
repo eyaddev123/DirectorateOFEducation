@@ -84,18 +84,29 @@ const swaggerOptions = {
             'email',
             'password',
             'phone_number',
-            'organization_department_role_ids'
+            'organization_id',
+            'department_id',
+            'role_id'
           ],
           properties: {
             userName: { type: 'string', example: 'john_doe' },
             email: { type: 'string', example: 'john@gmail.com' },
             phone_number: { type: 'string', example: '0954263536' },
-            password: { type: 'string', example: '123456' },
-            is_active: { type: 'boolean', example: true },
-            organization_department_role_ids: {
-              type: 'array',
-              items: { type: 'integer' },
-              example: [1, 2, 3]
+            password: { type: 'string', example: 'pass1234' },
+            organization_id: {
+              type: 'integer',
+              example: 1,
+              description: 'معرف المؤسسة'
+            },
+            department_id: {
+              type: 'integer',
+              example: 5,
+              description: 'معرف آخر قسم في الهرمية (مثل: شعبة التدقيق داخل قسم المحاسبة)'
+            },
+            role_id: {
+              type: 'integer',
+              example: 2,
+              description: 'معرف الدور (Role)'
             }
           }
         },

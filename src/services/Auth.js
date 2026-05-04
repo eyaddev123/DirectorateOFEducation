@@ -62,16 +62,19 @@ async function registerEmployee(userData) {
   const existingUser = await User.findOne({ where: { email: userData.email } })
   if (existingUser) throw new Error('Email already exists')
 
-  if (
-    !Array.isArray(userData.organization_department_role_ids) ||
-    userData.organization_department_role_ids.length === 0
-  ) throw new Error('organization_department_role_ids is required')
-
-  const roles = await OrgDeptRole.findAll({
-    where: { id: userData.organization_department_role_ids }
+  const orgDeptRole = await OrgDeptRole.findOne({
+    where: {
+      organization_id: userData.organization_id,
+      department_id: userData.department_id,
+      role_id: userData.role_id
+    }
   })
-  if (roles.length !== userData.organization_department_role_ids.length)
-    throw new Error('One or more roles are invalid')
+
+  if (!orgDeptRole) {
+    throw new Error(
+      'لا يوجد دور مرتبط بهذه المؤسسة والقسم. تأكد من إنشاء (organization_department_role) أولاً'
+    )
+  }
 
   const hashedPassword = await bcrypt.hash(userData.password, 10)
 
@@ -83,15 +86,15 @@ async function registerEmployee(userData) {
     is_active: true,
   })
 
-  const assignments = userData.organization_department_role_ids.map(roleId => ({
+  await UserRoleAssignment.create({
     user_id: user.id,
-    organization_department_roles_id: roleId,
-  }))
-  await UserRoleAssignment.bulkCreate(assignments)
+    organization_department_roles_id: orgDeptRole.id,
+  })
 
   return {
     userName: userData.userName,
     password: userData.password,
+    organization_department_roles_id: orgDeptRole.id,
     message: 'تم إنشاء حساب الموظف بنجاح. سلّم بيانات الدخول للموظف.',
   }
 }
