@@ -6,7 +6,8 @@ const {
   updateDepartment,
   deleteDepartment,
   getAllDepartments,
-  getDepartmentById
+  getDepartmentById,
+  getLeafDepartmentsByOrganization
 } = require('../controllers/DepartmentController')
 
 const { authMiddleware, authorize } = require('../middleware/authMiddleware')
@@ -125,6 +126,36 @@ router.get(
   authMiddleware,
   authorize('DEPARTMENT_VIEW'),
   getAllDepartments
+)
+
+/**
+ * @swagger
+ * /api/department/by-organization/{organizationId}/leaves:
+ *   get:
+ *     summary: جلب آخر هرمية للأقسام التابعة لمؤسسة
+ *     description: يعيد فقط الأقسام التي لا يوجد لها أبناء، مع اسم كامل يمثل المسار من الجذر (مثل "قسم المحاسبة\شعبة التدقيق")
+ *     tags: [Department]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: organizationId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: leaves
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DepartmentLeavesEnvelope'
+ */
+router.get(
+  '/by-organization/:organizationId/leaves',
+  authMiddleware,
+  authorize('DEPARTMENT_VIEW'),
+  getLeafDepartmentsByOrganization
 )
 
 /**

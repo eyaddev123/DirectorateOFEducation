@@ -6,7 +6,8 @@ const {
   updateRole,
   deleteRole,
   getAllRoles,
-  getRoleById
+  getRoleById,
+  getRolesByDepartment
 } = require('../controllers/RoleController')
 
 const { authMiddleware, authorize } = require('../middleware/authMiddleware')
@@ -131,6 +132,36 @@ router.get(
   authMiddleware,
   authorize('ROLE_VIEW'),
   getAllRoles
+)
+
+/**
+ * @swagger
+ * /api/role/by-department/{departmentId}:
+ *   get:
+ *     summary: جلب الأدوار المتاحة لقسم محدد
+ *     description: يعيد كل الأدوار المرتبطة بالقسم (للـ leaf department)، تستخدم عند تسجيل موظف بعد اختيار القسم
+ *     tags: [Role]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: departmentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: roles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RolesByDepartmentEnvelope'
+ */
+router.get(
+  '/by-department/:departmentId',
+  authMiddleware,
+  authorize('ROLE_VIEW'),
+  getRolesByDepartment
 )
 
 /**

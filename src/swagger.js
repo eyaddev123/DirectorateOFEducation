@@ -884,6 +884,32 @@ const swaggerOptions = {
           }
         },
 
+        DepartmentLeaf: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 3 },
+            name: {
+              type: 'string',
+              example: 'قسم المحاسبة\\شعبة التدقيق'
+            }
+          }
+        },
+
+        DepartmentLeavesEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/DepartmentLeaf' }
+            }
+          }
+        },
+
         // ======================== Role ==========================
         RoleTemplate: {
           type: 'object',
@@ -1019,6 +1045,30 @@ const swaggerOptions = {
               properties: {
                 id: { type: 'integer', example: 1 }
               }
+            }
+          }
+        },
+
+        RoleByDepartmentItem: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 2 },
+            name: { type: 'string', example: 'مدير المحاسبة' },
+            code: { type: 'string', example: 'ACCOUNTING_MANAGER' }
+          }
+        },
+
+        RolesByDepartmentEnvelope: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: true },
+            message: {
+              type: 'string',
+              example: 'تم جلب البيانات بنجاح'
+            },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/RoleByDepartmentItem' }
             }
           }
         }

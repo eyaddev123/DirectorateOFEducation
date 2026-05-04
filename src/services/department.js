@@ -143,6 +143,60 @@ async function getAllDepartmentsService() {
   return rows
 }
 
+// ================= GET LEAVES BY ORGANIZATION =================
+// يعيد فقط الأقسام التي لا يوجد لها أبناء (آخر هرمية)
+// مع اسم كامل يمثّل المسار من الجذر: "قسم المحاسبة\شعبة التدقيق"
+async function getLeafDepartmentsByOrganizationService(organizationId) {
+  const orgId = parseInt(organizationId, 10)
+
+  if (!Number.isInteger(orgId) || orgId < 1) {
+    const err = new Error('معرّف المؤسسة غير صالح')
+    err.statusCode = 400
+    throw err
+  }
+
+  const organization = await Organization.findByPk(orgId)
+  if (!organization) {
+    const err = new Error('المؤسسة غير موجودة')
+    err.statusCode = 404
+    throw err
+  }
+
+  const departments = await Department.findAll({
+    where: { organization_id: orgId },
+    attributes: ['id', 'name', 'parent_id'],
+    order: [['id', 'ASC']]
+  })
+
+  if (departments.length === 0) return []
+
+  const byId = new Map(departments.map(d => [d.id, d]))
+  const parentIds = new Set(
+    departments
+      .map(d => d.parent_id)
+      .filter(pid => pid !== null && pid !== undefined)
+  )
+
+  const leaves = departments.filter(d => !parentIds.has(d.id))
+
+  return leaves.map(leaf => {
+    const path = []
+    let current = leaf
+    const visited = new Set()
+
+    while (current && !visited.has(current.id)) {
+      visited.add(current.id)
+      path.unshift(current.name)
+      current = current.parent_id ? byId.get(current.parent_id) : null
+    }
+
+    return {
+      id: leaf.id,
+      name: path.join('\\')
+    }
+  })
+}
+
 // ================= GET BY ID =================
 async function getDepartmentByIdService(id) {
   const departmentId = parseInt(id, 10)
@@ -175,5 +229,6 @@ module.exports = {
   updateDepartmentService,
   deleteDepartmentService,
   getAllDepartmentsService,
-  getDepartmentByIdService
+  getDepartmentByIdService,
+  getLeafDepartmentsByOrganizationService
 }

@@ -304,10 +304,51 @@ async function getRoleByIdService(id) {
   return orgDeptRole
 }
 
+// ================= GET ROLES BY DEPARTMENT =================
+// يعيد كل الأدوار المرتبطة بقسم محدد (للـ leaf department)
+// ليستخدمها المستخدم عند تسجيل موظف جديد بعد اختيار القسم
+async function getRolesByDepartmentService(departmentId) {
+  const deptId = parseInt(departmentId, 10)
+
+  if (!Number.isInteger(deptId) || deptId < 1) {
+    const err = new Error('معرّف القسم غير صالح')
+    err.statusCode = 400
+    throw err
+  }
+
+  const department = await Department.findByPk(deptId)
+  if (!department) {
+    const err = new Error('القسم غير موجود')
+    err.statusCode = 404
+    throw err
+  }
+
+  const rows = await OrgDeptRole.findAll({
+    where: { department_id: deptId, is_active: true },
+    include: [
+      {
+        model: Role,
+        as: 'role',
+        attributes: ['id', 'name', 'code']
+      }
+    ],
+    order: [['id', 'ASC']]
+  })
+
+  return rows
+    .filter(r => r.role)
+    .map(r => ({
+      id: r.role.id,
+      name: r.role.name,
+      code: r.role.code
+    }))
+}
+
 module.exports = {
   createRoleService,
   updateRoleService,
   deleteRoleService,
   getAllRolesService,
-  getRoleByIdService
+  getRoleByIdService,
+  getRolesByDepartmentService
 }
