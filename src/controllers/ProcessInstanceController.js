@@ -6,7 +6,7 @@ const { startProcessInstance } = require('../services/processInstance')
 async function startProcessController(req, res) {
   try {
 
-    const { processId } = req.params
+   const processId = req.params.id
 
     const result = await startProcessInstance(processId)
 

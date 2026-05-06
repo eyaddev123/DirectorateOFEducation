@@ -29,7 +29,7 @@ const createDocumentTemplateService = async data => {
       name: data.name,
       file_path: data.file_path,
       file_type: data.file_type,
-      engine_type: data.engine_type || 'ACROFORM',
+      engine_type:'ACROFORM',
       config_json: data.config_json || null,
 
       // 🔥 server-controlled fields

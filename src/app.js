@@ -1,6 +1,6 @@
 const express = require('express');
-const cors = require('cors');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorMiddleware');
 const { setupSwagger } = require('./swagger');
@@ -26,8 +26,6 @@ const stageConfigRoutes = require('./routes/stageConfig');
 app.use('/api/stage_config', stageConfigRoutes);
 const process_definitionsRoutes = require('./routes/processDefinition');
 app.use('/api/process_definitions', process_definitionsRoutes);
-const process_instancesRoutes = require('./routes/processInstance');
-app.use('/api/process-instances', process_instancesRoutes);
 const documentTemplateRoutes = require('./routes/DocTem')
 app.use( '/api/document-templates',documentTemplateRoutes)
 const fieldRoutes = require('./routes/field')
@@ -40,4 +38,6 @@ const departmentRoutes = require('./routes/department');
 app.use('/api/department', departmentRoutes);
 const roleRoutes = require('./routes/role');
 app.use('/api/role', roleRoutes);
+const process_instancesRoutes = require('./routes/processInstance');
+app.use('/process-instances', process_instancesRoutes);
 module.exports = app;

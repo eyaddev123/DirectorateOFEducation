@@ -10,10 +10,6 @@ const createDocumentTemplateValidation = data => {
       .valid('pdf', 'docx', 'html')
       .required(),
 
-    engine_type: Joi.string()
-      .valid('ACROFORM', 'POSITIONED')
-      .optional(),
-
     config_json: Joi.any().optional(),
 
     file_path: Joi.string().required()

@@ -174,6 +174,76 @@ async function registerCitizen(userData) {
 
     throw error
   }
+  
+  // const sequelize = User.sequelize
+
+  // const transaction = await sequelize.transaction()
+
+  // try {
+
+  //   const { error } = validateRegisterCitizen(userData)
+
+  //   if (error) {
+  //     throw new Error(error.details.map(d => d.message).join(', '))
+  //   }
+
+  //   const existingUser = await User.findOne({
+  //     where: { email: userData.email },
+  //     transaction
+  //   })
+
+  //   if (existingUser) {
+  //     throw new Error('Email already exists')
+  //   }
+
+  //   const orgDeptRole = await OrgDeptRole.findOne({
+  //     where: {
+  //       camunda_group_key: 'CITIZEN'
+  //     },
+  //     transaction
+  //   })
+
+  //   if (!orgDeptRole) {
+  //     throw new Error('CITIZEN role not found')
+  //   }
+
+  //   const hashedPassword = await bcrypt.hash(userData.password, 10)
+
+  //   const inputUserDTO = new RegisterCitizenInputDTO({
+  //     ...userData,
+  //     password: hashedPassword
+  //   })
+
+  //   const user = await User.create(
+  //     { ...inputUserDTO },
+  //     { transaction }
+  //   )
+
+  //   await UserRoleAssignment.create({
+  //     user_id: user.id,
+  //     organization_department_roles_id: orgDeptRole.id
+  //   }, { transaction })
+
+  //   const token = jwt.sign(
+  //     { id: user.id },
+  //     JWT_SECRET,
+  //     { expiresIn: '30d' }
+  //   )
+
+  //   await transaction.commit()
+
+  //   return {
+  //     token,
+  //     user: new RegisterCitizenOutputDTO(user),
+  //     role_code: 'CITIZEN'
+  //   }
+
+  // } catch (error) {
+
+  //   await transaction.rollback()
+
+  //   throw error
+  // }
 }
 
 // ================== LOGIN — Step 1 ===================
@@ -198,6 +268,48 @@ async function login(userData) {
     session_id,
     message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
   }
+  //   const { error } = validateLogin(userData)
+  // if (error) {
+  //   throw new Error(error.details.map(d => d.message).join(', '))
+  // }
+
+  // const inputDTO = new LoginInputDTO(userData)
+
+  // const user = await User.findOne({
+  //   where: { userName: inputDTO.userName }
+  // })
+
+  // if (!user) {
+  //   throw new Error('Invalid userName or password')
+  // }
+
+  // const isValid = await bcrypt.compare(inputDTO.password, user.password)
+  // if (!isValid) {
+  //   throw new Error('Invalid userName or password')
+  // }
+
+  // const roleAssign = await UserRoleAssignment.findAll({
+  //   where: { user_id: user.id },
+  //   attributes: ['organization_department_roles_id']
+  // })
+
+  // if (!roleAssign.length) {
+  //   throw new Error('User has no roles')
+  // }
+
+  // const roleIds = roleAssign.map(r => r.organization_department_roles_id)
+
+  // const token = jwt.sign(
+  //   { id: user.id },
+  //   JWT_SECRET,
+  //   { expiresIn: '30d' }
+  // )
+
+  // return {
+  //   user: new LoginOutputDTO(user),
+  //   roles: roleIds,
+  //   token
+  // }
 }
 
 // ================== VERIFY REGISTER OTP — Step 2 ===================
@@ -261,10 +373,15 @@ async function verifyLoginOtp({ session_id, otp }) {
   }
 }
 
+
+
+
+
 module.exports = {
   registerEmployee,
   registerCitizen,
   verifyRegisterOtp,
   login,
   verifyLoginOtp,
+
 }

@@ -5,7 +5,9 @@ const router = express.Router()
 
 const {
   createProcessDefinition,
-  getAuthProcessesController
+  getAuthProcessesController,
+  reviewProcessController,
+  getProcessDetails
 } = require('../controllers/ProcessDefController')
 
 const {uploadBPMN,
@@ -17,7 +19,7 @@ const { authMiddleware ,authorize } = require('../middleware/authMiddleware')
  * @swagger
  * /api/process_definitions/create:
  *   post:
- *     summary: Create new process definition (upload BPMN)
+ *     summary: Create new process definition (upload BPMN) =.(المسؤول التقني)
  *     tags: [Process Definition]
  *     security:
  *       - bearerAuth: []
@@ -79,7 +81,7 @@ router.post(
  * @swagger
  * /api/process_definitions/auth/{id}:
  *   get:
- *     summary: Get processes where first stage is AUTH
+ *     summary: Get processes where first stage is AUTH => (عند مواطن او موظف )
  *     tags: [Process Definition]
  *     security:
  *       - bearerAuth: []
@@ -125,4 +127,155 @@ router.get(
   getAuthProcessesController
 )
 
+// =========================================
+// GET DETAILS + VALIDATION
+// =========================================
+ /**
+ * @swagger
+ * /api/process_definitions/{id}/details:
+ *   get:
+ *     summary: Get full process details with validation => ( المسؤول التقني)
+ *     tags: [Process Definition]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *         description: Process ID
+ *     responses:
+ *       200:
+ *         description: تم جلب تفاصيل العملية بنجاح
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: تم جلب تفاصيل العملية بنجاح
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     process:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: integer
+ *                         name:
+ *                           type: string
+ *                         code:
+ *                           type: string
+ *                         status:
+ *                           type: string
+ *                         version:
+ *                           type: integer
+ *                         is_active:
+ *                           type: boolean
+ *                         is_approved:
+ *                           type: boolean
+ *                         start_date:
+ *                           type: string
+ *                           format: date-time
+ *                         end_date:
+ *                           type: string
+ *                           format: date-time
+ *                     stages:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           name:
+ *                             type: string
+ *                           type:
+ *                             type: string
+ *                           auth_type:
+ *                             type: string
+ *                           config:
+ *                             type: object
+ *                           assignments:
+ *                             type: array
+ *                             items:
+ *                               type: object
+ *                     validation:
+ *                       type: object
+ *                       properties:
+ *                         is_valid:
+ *                           type: boolean
+ *                         errors:
+ *                           type: array
+ *                           items:
+ *                             type: string
+ *       404:
+ *         description: العملية غير موجودة
+ */
+router.get(
+  '/:id/details',
+  authMiddleware,
+  authorize('PROCESS_VIEW'),
+  getProcessDetails
+)
+
+// =========================================
+// APPROVE / REJECT
+// =========================================
+ /**
+ * @swagger
+ * /api/process_definitions/{id}/review:
+ *   post:
+ *     summary: Approve or reject a process => (المسؤول التقني)
+ *     tags: [Process Definition]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *         description: Process ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - decision
+ *             properties:
+ *               decision:
+ *                 type: string
+ *                 enum: [APPROVE, REJECT]
+ *                 example: APPROVE
+ *     responses:
+ *       200:
+ *         description: تم تنفيذ القرار بنجاح
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: تمت الموافقة على العملية
+ *       400:
+ *         description: قرار غير صالح أو العملية غير مكتملة
+ *       404:
+ *         description: العملية غير موجودة
+ */
+router.post(
+  '/:id/review',
+  authMiddleware,
+  authorize('PROCESS_APPROVE'), // أو permission مناسب
+  reviewProcessController
+)
 module.exports = router

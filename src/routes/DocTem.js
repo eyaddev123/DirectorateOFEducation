@@ -21,7 +21,7 @@ const { authMiddleware ,authorize } = require('../middleware/authMiddleware')
  * @swagger
  * tags:
  *   name: Document Templates
- *   description: Document Template Management APIs
+ *   description: Document Template Management APIs => (المسؤول التقني)
  */
 
 /**
@@ -57,11 +57,6 @@ const { authMiddleware ,authorize } = require('../middleware/authMiddleware')
  *                 enum: [pdf, docx, html]
  *                 example: pdf
  *
- *               engine_type:
- *                 type: string
- *                 enum: [ACROFORM, POSITIONED]
- *                 example: ACROFORM
- *
  *               config_json:
  *                 type: object
  *                 example:
@@ -91,7 +86,7 @@ router.post(
  * @swagger
  * /api/document-templates/{id}:
  *   put:
- *     summary: Update document template
+ *     summary: Update document template => (المسؤول التقني)
  *     tags: [Document Templates]
  *     security:
  *       - bearerAuth: []
@@ -126,11 +121,6 @@ router.post(
  *                 enum: [pdf, docx, html]
  *                 example: docx
  *
- *               engine_type:
- *                 type: string
- *                 enum: [ACROFORM, POSITIONED]
- *                 example: POSITIONED
- *
  *               config_json:
  *                 type: object
  *                 example:
@@ -160,7 +150,7 @@ router.put(
  * @swagger
  * /api/document-templates:
  *   get:
- *     summary: Get all active document templates
+ *     summary: Get all active document templates => (المسؤول التقني)
  *     tags: [Document Templates]
  *     security:
  *       - bearerAuth: []
@@ -183,7 +173,7 @@ router.get(
  * @swagger
  * /api/document-templates/{id}:
  *   get:
- *     summary: Get one active document template
+ *     summary: Get one active document template => (المسؤول التقني)
  *     tags: [Document Templates]
  *     security:
  *       - bearerAuth: []

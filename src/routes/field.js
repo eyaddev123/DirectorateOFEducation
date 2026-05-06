@@ -19,14 +19,14 @@ const {
  * @swagger
  * tags:
  *   name: Field
- *   description: Field Management APIs
+ *   description: Field Management APIs => (المسؤول التقني)
  */
 
 /**
  * @swagger
  * /api/fields:
  *   get:
- *     summary: Get all active fields
+ *     summary: Get all active fields => (المسؤول التقني)
  *     tags: [Field]
  *     security:
  *       - bearerAuth: []
@@ -46,7 +46,7 @@ router.get(
  * @swagger
  * /api/fields:
  *   post:
- *     summary: Create new field
+ *     summary: Create new field => (المسؤول التقني)
  *     tags: [Field]
  *     security:
  *       - bearerAuth: []
@@ -106,7 +106,7 @@ router.post(
  * @swagger
  * /api/fields/{id}:
  *   put:
- *     summary: Update field
+ *     summary: Update field => (المسؤول التقني)
  *     tags: [Field]
  *     security:
  *       - bearerAuth: []

@@ -1,34 +1,31 @@
-'use strict';
+'use strict'
 
 module.exports = (sequelize, DataTypes) => {
-
   class ProcessDefinition extends sequelize.Sequelize.Model {
-    static associate(models) {
-
+    static associate (models) {
       // organization relation
       ProcessDefinition.belongsTo(models.Organization, {
         foreignKey: 'organization_id',
         as: 'organization',
         onDelete: 'SET NULL',
-        onUpdate: 'CASCADE',
-      });
+        onUpdate: 'CASCADE'
+      })
 
       // type_trans relation
       ProcessDefinition.belongsTo(models.TypeTrans, {
         foreignKey: 'type_trans_id',
         as: 'type_trans',
         onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      });
+        onUpdate: 'CASCADE'
+      })
 
       // 🔥 stages relation (مهم)
       ProcessDefinition.hasMany(models.Stage, {
         foreignKey: 'process_definition_id',
         as: 'stages',
         onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-      });
-
+        onUpdate: 'CASCADE'
+      })
     }
   }
 
@@ -36,60 +33,64 @@ module.exports = (sequelize, DataTypes) => {
     {
       name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
       },
 
       code: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
 
       camunda_process_key: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
 
       camunda_deployment_id: {
         type: DataTypes.STRING,
-        allowNull: true,
+        allowNull: true
       },
 
       version: {
         type: DataTypes.INTEGER,
-        defaultValue: 1,
+        defaultValue: 1
       },
 
       status: {
         type: DataTypes.ENUM('draft', 'deployed'),
-        defaultValue: 'draft',
+        defaultValue: 'draft'
       },
       bpmn_xml: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: true
       },
 
       is_active: {
         type: DataTypes.BOOLEAN,
-        defaultValue: false,
+        defaultValue: false
       },
-
+      approval_status: {
+        type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
+        defaultValue: 'PENDING'
+      },
       organization_id: {
         type: DataTypes.INTEGER,
-        allowNull: true,
+        allowNull: true
       },
 
       type_trans_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: false
       },
 
       priority: {
         type: DataTypes.INTEGER,
-        defaultValue: 1,
+        defaultValue: 1
       },
-         start_date: {
+      start_date: {
         type: DataTypes.DATE,
-        allowNull: true
+        allowNull: false,
+        defaultValue: DataTypes.NOW
       },
 
       end_date: {
@@ -100,14 +101,14 @@ module.exports = (sequelize, DataTypes) => {
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
+        defaultValue: DataTypes.NOW
       },
 
       updated_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
+        defaultValue: DataTypes.NOW
+      }
     },
     {
       sequelize,
@@ -116,9 +117,9 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       underscored: true,
       createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      updatedAt: 'updated_at'
     }
-  );
+  )
 
-  return ProcessDefinition;
-};
+  return ProcessDefinition
+}

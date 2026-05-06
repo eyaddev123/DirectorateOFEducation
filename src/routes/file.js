@@ -14,7 +14,7 @@ const { authMiddleware ,authorize } = require('../middleware/authMiddleware')
  * @swagger
  * /api/files:
  *   get:
- *     summary: جلب كل الملفات
+ *     summary: جلب كل الملفات => (المسؤول التقني)
  *     tags: [File]
  *     security:
  *       - bearerAuth: []
@@ -33,7 +33,7 @@ router.get('/', authMiddleware, authorize('FILE_READ'), getAllFile)
  * @swagger
  * /api/files:
  *   post:
- *     summary: إنشاء ملف جديد
+ *     summary: إنشاء ملف جديد => (المسؤول التقني)
  *     tags: [File]
  *     security:
  *       - bearerAuth: []
@@ -57,7 +57,7 @@ router.post('/', authMiddleware, authorize('FILE_CREATE'), createFile)
  * @swagger
  * /api/files/{id}:
  *   put:
- *     summary: تعديل ملف
+ *     summary: تعديل ملف => (المسؤول التقني)
  *     tags: [File]
  *     security:
  *       - bearerAuth: []
@@ -88,7 +88,7 @@ router.put('/:id', authMiddleware, authorize('FILE_UPDATE'), updateFile)
  * @swagger
  * /api/files/{id}:
  *   get:
- *     summary: Get one active file
+ *     summary: Get one active file => (المسؤول التقني)
  *     tags: [File]
  *     security:
  *       - bearerAuth: []

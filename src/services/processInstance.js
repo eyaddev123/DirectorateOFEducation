@@ -3,19 +3,16 @@ const axios = require('axios')
 const {
   ProcessDefinition,
   Stage,
-  StageAssignment,
-  StageConfig,
-  OrgDeptRole
+  StageConfig
 } = require('../entities')
 
-// =========================================
-// START PROCESS INSTANCE
-// =========================================
+const { Op } = require('sequelize')
+const { CAMUNDA_URL } = require('../config/camunda')
+
 async function startProcessInstance(processId) {
 
-  // =========================================
-  // 1. GET PROCESS
-  // =========================================
+  console.log('[START PROCESS]', processId)
+
   const process = await ProcessDefinition.findByPk(processId)
 
   if (!process) {
@@ -26,34 +23,47 @@ async function startProcessInstance(processId) {
     throw new Error('Process is inactive')
   }
 
+  if (!process.camunda_process_key) {
+    throw new Error('Missing Camunda process key')
+  }
+
+  console.log('CAMUNDA KEY:', process.camunda_process_key)
+  console.log('CAMUNDA URL:', CAMUNDA_URL)
+
   // =========================================
-  // 2. START CAMUNDA PROCESS
-  // بدون variables
+  // CHECK PROCESS EXISTS IN CAMUNDA
+  // =========================================
+  try {
+    await axios.get(
+      `${CAMUNDA_URL}/process-definition/key/${process.camunda_process_key}`
+    )
+  } catch (e) {
+    console.log('CAMUNDA CHECK ERROR:', e.response?.data || e.message)
+    throw new Error('Process not deployed in Camunda')
+  }
+
+  // =========================================
+  // START PROCESS
   // =========================================
   const res = await axios.post(
-    `${process.env.CAMUNDA_URL}/process-definition/key/${process.camunda_process_key}/start`,
+    `${CAMUNDA_URL}/process-definition/key/${process.camunda_process_key}/start`,
     {}
   )
 
   const processInstanceId = res.data.id
 
   // =========================================
-  // 3. GET CURRENT TASKS
+  // GET TASKS
   // =========================================
   const tasksRes = await axios.get(
-    `${process.env.CAMUNDA_URL}/task`,
+    `${CAMUNDA_URL}/task`,
     {
-      params: {
-        processInstanceId
-      }
+      params: { processInstanceId }
     }
   )
 
   const tasks = tasksRes.data
 
-  // =========================================
-  // 4. NO TASKS
-  // =========================================
   if (!tasks.length) {
     return {
       processInstanceId,
@@ -62,123 +72,34 @@ async function startProcessInstance(processId) {
     }
   }
 
-  // =========================================
-  // 5. CURRENT TASK
-  // =========================================
   const currentTask = tasks[0]
 
   // =========================================
-  // 6. FIND STAGE
+  // FIND STAGE
   // =========================================
   const stage = await Stage.findOne({
     where: {
       process_definition_id: process.id,
-      camunda_task_key: currentTask.taskDefinitionKey,
-      auth_type: 'AUTH'
+      [Op.or]: [
+        { camunda_task_key: currentTask.taskDefinitionKey },
+        { code: currentTask.taskDefinitionKey }
+      ]
     }
   })
 
   if (!stage) {
-    throw new Error(
-      `No Stage found for taskDefinitionKey: ${currentTask.taskDefinitionKey}`
-    )
+    throw new Error(`No Stage found for: ${currentTask.taskDefinitionKey}`)
   }
 
-  // =========================================
-  // 7. GET STAGE CONFIG
-  // =========================================
   const stageConfig = await StageConfig.findOne({
-    where: {
-      stage_id: stage.id
-    }
+    where: { stage_id: stage.id }
   })
 
-  // =========================================
-  // 8. USER TASK
-  // =========================================
-  if (stage.type === 'USER_TASK') {
-
-    const assignments = await StageAssignment.findAll({
-      where: {
-        stage_id: stage.id
-      },
-
-      include: [
-        {
-          model: OrgDeptRole,
-          as: 'organization_department_role'
-        }
-      ]
-    })
-
-    return {
-      processInstanceId,
-      definitionId: res.data.definitionId,
-
-      currentTask: {
-        taskId: currentTask.id,
-        taskName: currentTask.name,
-        taskDefinitionKey: currentTask.taskDefinitionKey
-      },
-
-      stage: {
-        id: stage.id,
-        name: stage.name,
-        type: stage.type,
-        code: stage.code,
-        auth_type: stage.auth_type
-      },
-
-      assignments: assignments.map(a => ({
-        id: a.id,
-        role_id: a.organization_department_roles_id,
-        role_name:
-          a.organization_department_role?.name || null
-      })),
-
-      config: stageConfig?.config_json || null
-    }
-  }
-
-  // =========================================
-  // 9. SERVICE TASK
-  // =========================================
-  if (stage.type === 'SERVICE_TASK') {
-
-    return {
-      processInstanceId,
-      definitionId: res.data.definitionId,
-
-      currentTask: {
-        taskId: currentTask.id,
-        taskName: currentTask.name,
-        taskDefinitionKey: currentTask.taskDefinitionKey
-      },
-
-      stage: {
-        id: stage.id,
-        name: stage.name,
-        type: stage.type,
-        code: stage.code,
-        auth_type: stage.auth_type
-      },
-
-      config: stageConfig?.config_json || null
-    }
-  }
-
-  // =========================================
-  // 10. DEFAULT
-  // =========================================
   return {
     processInstanceId,
     definitionId: res.data.definitionId,
-
-    currentTask: {
-      taskId: currentTask.id,
-      taskName: currentTask.name,
-      taskDefinitionKey: currentTask.taskDefinitionKey
-    }
+    stage,
+    config: stageConfig?.config_json || null
   }
 }
 

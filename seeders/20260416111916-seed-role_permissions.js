@@ -100,6 +100,14 @@ module.exports = {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.PROCESS_SETUP
       },
+         {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.PROCESS_APPROVE
+      },
+         {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.PROCESS_VIEW
+      },
       {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.STAGE_CONFIG_CREATE
@@ -132,7 +140,14 @@ module.exports = {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.GET_ONE_TEMPLATE
       },
-
+      {
+        organization_department_roles_id: roleMap.CITIZEN,
+        permission_id: permMap.PROCESS_VIEW_COMPLAINT
+      },
+      {
+        organization_department_roles_id: roleMap.EMPLOYEE,
+        permission_id: permMap.PROCESS_VIEW_COMPLAINT
+      },
       // ================= CITIZEN =================
       {
         organization_department_roles_id: roleMap.CITIZEN,
@@ -142,6 +157,8 @@ module.exports = {
         organization_department_roles_id: roleMap.CITIZEN,
         permission_id: permMap.PROCESS_READ_AUTH
       },
+
+
 
       // ================= DIRECTOR =================
       {

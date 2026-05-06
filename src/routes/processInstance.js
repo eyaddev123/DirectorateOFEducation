@@ -34,7 +34,7 @@ const { authMiddleware ,authorize } = require('../middleware/authMiddleware')
  *         description: Forbidden
  */
 router.post(
-  '/process-instances/:id/start',
+  '/:id/start',
   authMiddleware,
   authorize('PROCESS_START'),
   startProcessController

@@ -15,6 +15,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'stage_id',
         as: 'stage_assignments'
       })
+      Stage.hasOne(models.StageConfig, {
+        foreignKey: 'stage_id',
+        as: 'stage_config'
+      })
+
     }
   }
 

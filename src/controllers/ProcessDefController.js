@@ -5,7 +5,9 @@ const asyncHandler = require('../middleware/asyncHandler')
 const {
   createProcessDefinitionService,
   setupProcessAfterCreation,
-  getAuthProcesses
+  getAuthProcesses,
+  getProcessDetailsWithValidation,
+  reviewProcess
 } = require('../services/processDefinition')
 
 ///// ============================== create new Process Definition ====================================
@@ -67,8 +69,53 @@ const getAuthProcessesController = asyncHandler(async (req, res) => {
     })
   }
 })
+// =========================================
+// GET PROCESS DETAILS + VALIDATION
+// =========================================
+const getProcessDetails = asyncHandler(async (req, res) => {
+  try {
+  const processId = req.params.id
 
+  const result =
+    await getProcessDetailsWithValidation(processId)
+
+  return res.status(200).json({
+    success: true,
+    ...result
+  })
+    } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    })
+  }
+})
+
+// =========================================
+// REVIEW PROCESS (APPROVE / REJECT)
+// =========================================
+const reviewProcessController = asyncHandler(async (req, res) => {
+  try {
+  const processId = req.params.id
+  const { decision } = req.body
+
+  const result =
+    await reviewProcess(processId, decision)
+
+  return res.status(200).json({
+    success: true,
+    ...result
+  })
+    } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    })
+  }
+})
 module.exports = {
   createProcessDefinition,
-  getAuthProcessesController
+  getAuthProcessesController,
+  getProcessDetails,
+  reviewProcessController
 }

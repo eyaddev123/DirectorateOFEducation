@@ -24,26 +24,29 @@ async function createFieldService(fieldData) {
     })
 
     // =========================================
+    // CHECK LIST TYPE
+    // =========================================
+    const isListType =
+      ['choice', 'multiChoice'].includes(inputFiledDTO.field_type)
+
+    // =========================================
     // LIST VALIDATION
     // =========================================
-    if (inputFiledDTO.field_type === 'list') {
+    if (isListType) {
 
-      // ✅ required
       if (
         !inputFiledDTO.list_json ||
         !Array.isArray(inputFiledDTO.list_json) ||
         inputFiledDTO.list_json.length === 0
       ) {
         throw new Error(
-          'list_json is required and must be a non-empty array when field_type is list'
+          'list_json is required and must be a non-empty array when field_type is choice/multiChoice'
         )
       }
 
-      // ✅ كل العناصر String
+      // كل العناصر لازم تكون string غير فاضي
       const invalidItem = inputFiledDTO.list_json.find(
-        item =>
-          typeof item !== 'string' ||
-          item.trim() === ''
+        item => typeof item !== 'string' || item.trim() === ''
       )
 
       if (invalidItem !== undefined) {
@@ -52,31 +55,21 @@ async function createFieldService(fieldData) {
         )
       }
 
-      // ✅ إزالة الفراغات
+      // تنظيف القيم
       inputFiledDTO.list_json =
-        inputFiledDTO.list_json.map(
-          item => item.trim()
-        )
+        inputFiledDTO.list_json.map(item => item.trim())
 
-      // ✅ منع التكرار
-      const uniqueValues = new Set(
-        inputFiledDTO.list_json
-      )
+      // منع التكرار
+      const uniqueValues = new Set(inputFiledDTO.list_json)
 
-      if (
-        uniqueValues.size !==
-        inputFiledDTO.list_json.length
-      ) {
+      if (uniqueValues.size !== inputFiledDTO.list_json.length) {
         throw new Error(
           'list_json contains duplicate values'
         )
       }
-    }
 
-    // =========================================
-    // NON-LIST TYPES
-    // =========================================
-    if (inputFiledDTO.field_type !== 'list') {
+    } else {
+      // أي نوع غير list → نخليها null
       inputFiledDTO.list_json = null
     }
 
@@ -114,9 +107,7 @@ async function updateFieldService(FieldData, FieldId) {
     throw new Error('معرّف الحقل غير صالح')
   }
 
-  // =========================================
   // VALIDATION
-  // =========================================
   const { error } = ValidateUpdateField({
     ...FieldData
   })
@@ -125,9 +116,7 @@ async function updateFieldService(FieldData, FieldId) {
     throw new Error(error.details[0].message)
   }
 
-  // =========================================
   // GET CURRENT FIELD
-  // =========================================
   const oldField = await Field.findByPk(id)
 
   if (!oldField) {
@@ -136,47 +125,40 @@ async function updateFieldService(FieldData, FieldId) {
     throw err
   }
 
-  // =========================================
   // FINAL FIELD TYPE
-  // =========================================
   const finalFieldType =
     FieldData.field_type || oldField.field_type
 
-  // =========================================
+  const isListType =
+    ['choice', 'multiChoice'].includes(finalFieldType)
+
+  const incomingHasList = FieldData.list_json !== undefined
+
   // VALIDATE list_json
-  // =========================================
-  if (
-    FieldData.list_json !== undefined &&
-    finalFieldType !== 'list'
-  ) {
+  if (incomingHasList && !isListType) {
     throw new Error(
-      'لا يمكن تعديل list_json إلا إذا كان field_type = list'
+      'لا يمكن تعديل list_json إلا إذا كان field_type = choice أو multiChoice'
     )
   }
 
-  // =========================================
   // إذا النوع صار list لازم list_json
-  // =========================================
-  if (
-    finalFieldType === 'list' &&
-    FieldData.field_type === 'list' &&
-    FieldData.list_json === undefined
-  ) {
+  const typeChangedToList =
+    FieldData.field_type &&
+    isListType &&
+    oldField.field_type !== FieldData.field_type
+
+  if (typeChangedToList && !FieldData.list_json) {
     throw new Error(
-      'يجب إرسال list_json عند تحويل النوع إلى list'
+      'يجب إرسال list_json عند تحويل النوع إلى choice أو multiChoice'
     )
   }
 
-  // =========================================
   // DEACTIVATE OLD VERSION
-  // =========================================
   await oldField.update({
     is_active: false
   })
 
-  // =========================================
   // CREATE NEW VERSION
-  // =========================================
   const newField = await Field.create({
 
     field_name:
@@ -185,26 +167,18 @@ async function updateFieldService(FieldData, FieldId) {
     field_type:
       finalFieldType,
 
-    // إذا النوع list
-    list_json:
-      finalFieldType === 'list'
-        ? (
-            FieldData.list_json ??
-            oldField.list_json
-          )
-        : null,
+    // list_json logic
+    list_json: isListType
+      ? (FieldData.list_json ?? oldField.list_json)
+      : null,
 
-    // زيادة النسخة
     version: (oldField.version || 1) + 1,
 
-    // النسخة الجديدة فعالة
     is_active:
       FieldData.is_active ?? true
   })
 
-  // =========================================
   // RETURN DTO
-  // =========================================
   return new FieldOutputDTO(newField)
 }
 

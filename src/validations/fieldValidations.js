@@ -5,7 +5,8 @@ const ValidateCreateField = (data) => {
     field_name: Joi.string().trim().min(2).max(100).required(),
 
     field_type: Joi.string()
-      .valid('string','float', 'int', 'text', 'date', 'boolean','list')
+      .valid('string','float', 'int','phoneNumber', 'text', 'date', 'boolean','choice',
+          'multiChoice')
       .required(),
 
     list_json: Joi.alternatives().try(
@@ -23,7 +24,8 @@ const ValidateUpdateField = (data) => {
     field_name: Joi.string().trim().min(2).max(100).optional(),
 
     field_type: Joi.string()
-      .valid('string','float', 'int', 'text', 'date', 'boolean','list')
+        .valid('string','float', 'int','phoneNumber', 'text', 'date', 'boolean','choice',
+          'multiChoice')
       .optional(),
 
     list_json: Joi.alternatives().try(

@@ -7,7 +7,7 @@ const { TypeTrans } = require('../entities')
 const { TypeProcessInputDTO } = require('../dto/TypeProcessInputDTO')
 const { TypeProcessOutputDTO } = require('../dto/TypeProcessOutputDTO')
 
-// ================= CREATE =================
+// =================      CREATE       =================
 async function createTypeProcessService(data) {
   const { error } = ValidateCreateTypeProcess(data)
 
@@ -55,7 +55,6 @@ async function updateTypeProcessService(data, id) {
   }
 
   const payload = {}
-  if (data.name !== undefined) payload.name = data.name
   if(data.is_active !== undefined) payload.is_active= data.is_active
 
   await typeProcess.update(payload)
@@ -68,9 +67,8 @@ async function updateTypeProcessService(data, id) {
 async function getAllTypeProcessesService() {
   const rows = await TypeTrans.findAll({
     order: [['id', 'ASC']]
-  })
-
-  return rows.map(r => new TypeProcessOutputDTO(r))
+  }) 
+  return rows.map(r => new TypeProcessOutputDTO(r)) 
 }
 
 module.exports = {

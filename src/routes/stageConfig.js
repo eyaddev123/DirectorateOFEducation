@@ -7,7 +7,7 @@ const { createStageConfig , getJsonProcess} = require('../controllers/StageConfi
  * @swagger
  * /api/stage_config/create:
  *   post:
- *     summary: Create bulk stage configurations
+ *     summary: Create bulk stage configurations=> (المسؤول التقني)
  *     tags: [Stage Config]
  *     security:
  *       - bearerAuth: []
@@ -127,7 +127,7 @@ router.post(
  * @swagger
  * /api/stage_config/config/{id}:
  *   get:
- *     summary: Get config_json for process (AUTH stage)
+ *     summary: Get config_json for process (AUTH stage) => (مواطن او موظف لانها تعرض الاوراق المطلوبة من المواطن )
  *     tags: [Stage Config]
  *     security:
  *       - bearerAuth: []

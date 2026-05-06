@@ -6,6 +6,7 @@ const {
   verifyRegisterOtp,
   login,
   verifyLoginOtp,
+  login1
 } = require("../services/Auth")
 
 // ================= REGISTER EMPLOYEE — Step 1 =================
@@ -59,11 +60,28 @@ const verifyLoginOtpUser = async (req, res) => {
     return res.status(401).json({ success: false, message: err.message })
   }
 }
+///////////////////////////////////////////////////////////////////////
+const loginUser1 = async (req, res) => {
+  try {
+    const result = await login1(req.body)
 
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: result
+    })
+  } catch (err) {
+    return res.status(401).json({
+      success: false,
+      message: err.message
+    })
+  }
+}
 module.exports = {
   registerEmployeeUser,
   registerCitizenUser,
   verifyRegisterOtpUser,
   loginUser,
   verifyLoginOtpUser,
+  loginUser1
 }
