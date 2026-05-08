@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const {
-  submitTransactionController
+  submitProcessInstanceController
 } = require('../controllers/processInstanceController')
 
 const {
@@ -51,7 +51,7 @@ const {
 router.post(
   '/submit/:transactionId/:processId',
   authMiddleware,
-  submitTransactionController
+  submitProcessInstanceController
 )
 
 module.exports = router

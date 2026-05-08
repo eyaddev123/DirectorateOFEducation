@@ -1,26 +1,22 @@
 const {
   createDraftTransaction,
   updateDraft
-} = require('../services/draftTransactionService')
+} = require('../services/transaction')
 
-const {
-  submitTransaction
-} = require('../services/submitTransactionService')
 
 // ======================================================
 // CREATE OR RETURN EXISTING DRAFT
 // ======================================================
 
 async function createDraft(req, res, next) {
-
   try {
 
     const userId = req.user.id
-    const { type_trans_id } = req.body
+    const typeTransId = req.params.typeTransId
 
     const result = await createDraftTransaction(
       userId,
-      type_trans_id
+      typeTransId
     )
 
     res.status(200).json(result)
@@ -56,6 +52,5 @@ async function updateDraftController(req, res, next) {
 
 module.exports = {
   createDraft,
-  updateDraftController,
-  submitTransactionController
+  updateDraftController
 }

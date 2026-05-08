@@ -120,7 +120,7 @@ async function startProcessInstance(transactionId, processId, data) {
 
   if (stage) {
 
-    const stageConfig = await StageConfig.findOne({
+     await StageConfig.findOne({
       where: { stage_id: stage.id }
     })
 
@@ -130,12 +130,9 @@ async function startProcessInstance(transactionId, processId, data) {
 
     return {
       message: 'Process submitted successfully',
-      processInstanceId,
       transactionId: transaction.id,
-      processInstance,
-      currentTask: firstTask,
-      stage,
-      config: stageConfig?.config_json || null
+      transactionData: transaction.data,
+      processInstance
     }
   }
 

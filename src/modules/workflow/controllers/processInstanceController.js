@@ -1,17 +1,17 @@
 const {
-  submitTransaction
+  startProcessInstance
 } = require('../services/processInstanceService')
 
 // =========================================
 // SUBMIT TRANSACTION
 // =========================================
-async function submitTransactionController(req, res) {
+async function submitProcessInstanceController(req, res) {
 
   try {
 
     const { transactionId, processId } = req.params
 
-    const result = await submitTransaction(
+    const result = await startProcessInstance(
       transactionId,
       processId,
       req.body
@@ -32,5 +32,5 @@ async function submitTransactionController(req, res) {
 }
 
 module.exports = {
-  submitTransactionController
+  submitProcessInstanceController
 }
