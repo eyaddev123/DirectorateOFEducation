@@ -904,7 +904,7 @@ const swaggerOptions = {
       }
     }
   },
-  apis: [path.join(__dirname, './routes/*.js')]
+  apis: ['./src/modules/**/routes/*.js']
 }
 
 const swaggerSpec = swaggerJsDoc(swaggerOptions)

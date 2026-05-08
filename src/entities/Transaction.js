@@ -1,32 +1,29 @@
-'use strict';
+'use strict'
 
 module.exports = (sequelize, DataTypes) => {
-
   class Transaction extends sequelize.Sequelize.Model {
-    static associate(models) {
-
+    static associate (models) {
       Transaction.belongsTo(models.User, {
         foreignKey: 'user_id',
         as: 'user',
-        onDelete: 'CASCADE',
-      });
+        onDelete: 'CASCADE'
+      })
 
       Transaction.belongsTo(models.TypeTrans, {
         foreignKey: 'type_trans_id',
         as: 'type_trans',
-        onDelete: 'CASCADE',
-      });
+        onDelete: 'CASCADE'
+      })
 
       Transaction.hasMany(models.ProcessInstanceStage, {
         foreignKey: 'transaction_id',
-        as: 'stages',
-      });
+        as: 'stages'
+      })
 
       Transaction.hasMany(models.DocumentInstance, {
         foreignKey: 'transaction_id',
-        as: 'documents',
-      });
-
+        as: 'documents'
+      })
     }
   }
 
@@ -34,45 +31,51 @@ module.exports = (sequelize, DataTypes) => {
     {
       user_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: false
       },
 
       type_trans_id: {
         type: DataTypes.INTEGER,
-        allowNull: false,
+        allowNull: false
       },
 
       version: {
         type: DataTypes.INTEGER,
-        defaultValue: 1,
+        defaultValue: 1
       },
 
       is_active: {
         type: DataTypes.BOOLEAN,
-        defaultValue: true,
+        defaultValue: true
       },
 
       status: {
-        type: DataTypes.ENUM('pending','in_progress','completed','rejected','cancelled'),
-        defaultValue: 'pending',
+        type: DataTypes.ENUM(
+          'draft',
+          'in_progress',
+          'completed',
+          'rejected',
+          'cancelled'
+        ),
+        defaultValue: 'draft'
       },
 
       data: {
         type: DataTypes.JSON,
-        allowNull: true,
+        allowNull: true
       },
 
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
+        defaultValue: DataTypes.NOW
       },
 
       updated_at: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW,
-      },
+        defaultValue: DataTypes.NOW
+      }
     },
     {
       sequelize,
@@ -81,9 +84,9 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       underscored: true,
       createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      updatedAt: 'updated_at'
     }
-  );
+  )
 
-  return Transaction;
-};
+  return Transaction
+}

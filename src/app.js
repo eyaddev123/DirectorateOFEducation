@@ -1,43 +1,58 @@
-const express = require('express');
-const dotenv = require('dotenv');
-const cors = require('cors');
-const routes = require('./routes');
-const errorHandler = require('./middleware/errorMiddleware');
-const { setupSwagger } = require('./swagger');
+const express = require('express')
+const dotenv = require('dotenv')
+const cors = require('cors')
+const errorHandler = require('./core/middleware/errorMiddleware')
+const { setupSwagger } = require('./swagger')
 
-dotenv.config();
+dotenv.config()
 
-const app = express();
+const app = express()
 
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-setupSwagger(app);
+setupSwagger(app)
 
-app.use('/api', routes);
+// ====================== ROUTES ======================
 
-app.use(errorHandler);
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-const typeProcessRoutes = require('./routes/typeProcess');
-app.use('/api/typeProcess', typeProcessRoutes);
-const stageConfigRoutes = require('./routes/stageConfig');
-app.use('/api/stage_config', stageConfigRoutes);
-const process_definitionsRoutes = require('./routes/processDefinition');
-app.use('/api/process_definitions', process_definitionsRoutes);
-const documentTemplateRoutes = require('./routes/DocTem')
-app.use( '/api/document-templates',documentTemplateRoutes)
-const fieldRoutes = require('./routes/field')
-app.use( '/api/fields',fieldRoutes)
-const fileRoutes = require('./routes/file')
-app.use( '/api/files',fileRoutes)
-const organizationRoutes = require('./routes/organization');
-app.use('/api/organization', organizationRoutes);
-const departmentRoutes = require('./routes/department');
-app.use('/api/department', departmentRoutes);
-const roleRoutes = require('./routes/role');
-app.use('/api/role', roleRoutes);
-const process_instancesRoutes = require('./routes/processInstance');
-app.use('/process-instances', process_instancesRoutes);
-module.exports = app;
+const authRoutes = require('./modules/auth/routes/auth')
+app.use('/api/auth', authRoutes)
+
+const typeProcessRoutes = require('./modules/requirements/routes/typeProcess')
+app.use('/api/typeProcess', typeProcessRoutes)
+
+const stageConfigRoutes = require('./modules/workflow/routes/stageConfig')
+app.use('/api/stage_config', stageConfigRoutes)
+
+const processDefinitionsRoutes = require('./modules/workflow/routes/processDefinition')
+app.use('/api/process_definitions', processDefinitionsRoutes)
+
+const documentTemplateRoutes = require('./modules/requirements/routes/DocTem')
+app.use('/api/document-templates', documentTemplateRoutes)
+
+const fieldRoutes = require('./modules/requirements/routes/field')
+app.use('/api/fields', fieldRoutes)
+
+const fileRoutes = require('./modules/requirements/routes/file')
+app.use('/api/files', fileRoutes)
+
+const organizationRoutes = require('./modules/organization/routes/organization')
+app.use('/api/organization', organizationRoutes)
+
+const departmentRoutes = require('./modules/organization/routes/department')
+app.use('/api/department', departmentRoutes)
+
+const roleRoutes = require('./modules/organization/routes/role')
+app.use('/api/role', roleRoutes)
+
+const processInstancesRoutes = require('./modules/workflow/routes/processInstance')
+app.use('/process-instances', processInstancesRoutes)
+
+const complaintsRoutes = require('./modules/workflow/routes/complaint')
+app.use('/api/complaint', complaintsRoutes)
+
+// ====================== ERROR HANDLER ======================
+app.use(errorHandler)
+
+module.exports = app

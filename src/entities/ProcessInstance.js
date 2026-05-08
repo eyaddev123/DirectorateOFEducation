@@ -3,11 +3,8 @@
 const { Model } = require('sequelize')
 
 module.exports = (sequelize, DataTypes) => {
-
   class ProcessInstance extends Model {
-
-    static associate(models) {
-
+    static associate (models) {
       // =========================================
       // PROCESS DEFINITION
       // =========================================
@@ -18,6 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         onUpdate: 'CASCADE'
       })
 
+      ProcessInstance.belongsTo(models.Transaction, {
+        foreignKey: 'transaction_id',
+        as: 'transaction'
+      })
       // =========================================
       // CURRENT STAGE
       // =========================================
@@ -27,13 +28,11 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'SET NULL',
         onUpdate: 'CASCADE'
       })
-
     }
   }
 
   ProcessInstance.init(
     {
-
       process_definition_id: {
         type: DataTypes.INTEGER,
         allowNull: false
@@ -43,18 +42,17 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false
       },
-
+      transaction_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
       current_stage_id: {
         type: DataTypes.INTEGER,
         allowNull: true
       },
 
       status: {
-        type: DataTypes.ENUM(
-          'running',
-          'completed',
-          'cancelled'
-        ),
+        type: DataTypes.ENUM('running', 'completed', 'cancelled'),
         defaultValue: 'running'
       },
 
@@ -69,7 +67,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: DataTypes.NOW
       }
-
     },
     {
       sequelize,

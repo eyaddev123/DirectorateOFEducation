@@ -35,14 +35,20 @@ module.exports = {
       },
 
       status: {
-        type: Sequelize.ENUM('pending','in_progress','completed','rejected','cancelled'),
-        defaultValue: 'pending'
+        type: Sequelize.ENUM(
+          'draft',
+          'in_progress',
+          'completed',
+          'rejected',
+          'cancelled'
+        ),
+        defaultValue: 'draft'
       },
 
       data: {
         type: Sequelize.JSON,
         allowNull: true,
-        comment: "يمكن تخزين البيانات الخاصة بالمعاملة هنا"
+        comment: 'يمكن تخزين البيانات الخاصة بالمعاملة هنا'
       },
 
       created_at: {
@@ -59,7 +65,7 @@ module.exports = {
     })
   },
 
-  down: async (queryInterface) => {
+  down: async queryInterface => {
     await queryInterface.dropTable('transactions')
   }
 }
