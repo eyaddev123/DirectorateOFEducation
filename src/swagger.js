@@ -10,10 +10,10 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'API documentation for Grass project'
     },
-   servers: [
+    servers: [
       {
-        url: 'https://dev-education-directorate.abukm.com',
-        description: 'Production server'
+        url: process.env.API_PUBLIC_URL || `http://localhost:${process.env.PORT || 4000}`,
+        description: process.env.API_PUBLIC_URL ? 'Public server' : 'Local server'
       }
     ],
     tags: [
