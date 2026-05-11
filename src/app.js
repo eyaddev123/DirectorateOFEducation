@@ -34,7 +34,7 @@ app.use('/api/fields', fieldRoutes)
 const fileRoutes = require('./modules/requirements/routes/file')
 app.use('/api/files', fileRoutes)
 
-const typeProcessRoutes = require('./modules/requirements/routes/typeProcess')
+const typeProcessRoutes = require('./modules/workflow/routes/typeProcess')
 app.use('/api/typeProcess', typeProcessRoutes)
 
 //==========================================================================
@@ -68,6 +68,15 @@ app.use('/api/process_definitions', processDefinitionsRoutes)
 
 const transactionRoutes = require('./modules/transaction/routes/Transaction')
 app.use('/api/transaction', transactionRoutes)
+
+
+//TransactionClient
+const internalTransactionRoutes =
+  require('./modules/transaction/routes/TransactionClient')
+app.use(
+  '/internal/transactions',
+  internalTransactionRoutes
+)
 
 // ====================== ERROR HANDLER ======================
 app.use(errorHandler)

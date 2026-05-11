@@ -7,7 +7,8 @@ const {
   createProcessDefinition,
   getAuthProcessesController,
   reviewProcessController,
-  getProcessDetails
+  getProcessDetails,
+  processById
 } = require('../controllers/processDefController')
 
 const {uploadBPMN,
@@ -276,5 +277,11 @@ router.post(
   authMiddleware,
   authorize('PROCESS_APPROVE'), // أو permission مناسب
   reviewProcessController
+)
+
+
+router.get(
+  '/:id',
+  processById
 )
 module.exports = router

@@ -7,7 +7,8 @@ const {
   setupProcessAfterCreation,
   getAuthProcesses,
   getProcessDetailsWithValidation,
-  reviewProcess
+  reviewProcess,
+  getProcessByIdService
 } = require('../services/processDefinitionService')
 
 ///// ============================== create new Process Definition ====================================
@@ -113,9 +114,31 @@ const reviewProcessController = asyncHandler(async (req, res) => {
     })
   }
 })
+///////////////////////////////////////////////////
+const processById = asyncHandler(async (req, res) => {
+  try {
+    const result = await getProcessByIdService(req.params.id)
+
+    return res.status(200).json({
+      success: true,
+      message: 'تم جلب البيانات بنجاح',
+      data: result
+    })
+
+  } catch (err) {
+    return res.status(404).json({
+      success: false,
+      message: err.message
+    })
+  }
+})
+
+//////////////////////////////////////////////////
+
 module.exports = {
   createProcessDefinition,
   getAuthProcessesController,
   getProcessDetails,
-  reviewProcessController
+  reviewProcessController,
+  processById
 }

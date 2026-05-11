@@ -1,9 +1,17 @@
 const express = require('express')
+
 const router = express.Router()
 
 const {
-createDraft,
-  updateDraftController
+   createOrUpdateDraftController,
+
+  getUserDraftByProcessController,
+
+  getTransactionController,
+
+  submitTransactionController,
+
+
 } = require('../controllers/transactionController')
 
 const {
@@ -11,87 +19,94 @@ const {
 } = require('../../../core/middleware/authMiddleware')
 
 /**
- * =========================================
- * CREATE OR GET DRAFT
- * =========================================
+ * =====================================================
+ * CREATE OR UPDATE DRAFT
+ * =====================================================
  */
 
 /**
  * @swagger
- * /api/transaction/draft/{typeTransId}:
+ * /api/transaction/draft/{processId}:
  *   post:
- *     summary: Create new draft or return existing one
+ *     summary: Create new draft or update existing draft for same process
  *     tags: [Transaction]
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: path
- *         name: typeTransId
+ *         name: processId
  *         required: true
  *         schema:
  *           type: integer
- *         description: Transaction type ID
  *         example: 1
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             example:
+ *               full_name: أحمد محمد
+ *               phone: 0999999999
+ *               note: طلب جديد
  *     responses:
  *       200:
- *         description: Draft returned successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Existing draft returned
- *                 isNew:
- *                   type: boolean
- *                   example: false
- *                 data:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: integer
- *                       example: 5
- *                     user_id:
- *                       type: integer
- *                       example: 2
- *                     type_trans_id:
- *                       type: integer
- *                       example: 1
- *                     status:
- *                       type: string
- *                       example: draft
- *                     data:
- *                       type: object
- *                     created_at:
- *                       type: string
- *                       format: date-time
- *                     updated_at:
- *                       type: string
- *                       format: date-time
+ *         description: Draft created or updated
  *       401:
  *         description: Unauthorized
  */
 router.post(
-  '/draft/:typeTransId',
+  '/draft/:processId',
   authMiddleware,
-  createDraft
+  createOrUpdateDraftController
 )
 
 /**
- * =========================================
- * UPDATE DRAFT
- * =========================================
+ * =====================================================
+ * GET USER DRAFT BY PROCESS
+ * =====================================================
  */
 
 /**
  * @swagger
- * /api/transaction/draft/{transactionId}:
- *   put:
- *     summary: Update draft transaction data
+ * /api/transaction/draft/{processId}:
+ *   get:
+ *     summary: Get user draft by process
+ *     tags: [Transaction]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: processId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Draft retrieved successfully
+ *       404:
+ *         description: Draft not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  '/draft/:processId',
+  authMiddleware,
+  getUserDraftByProcessController
+)
+
+/**
+ * =====================================================
+ * GET TRANSACTION BY ID
+ * =====================================================
+ */
+
+/**
+ * @swagger
+ * /api/transaction/{transactionId}:
+ *   get:
+ *     summary: Get transaction by ID
  *     tags: [Transaction]
  *     security:
  *       - bearerAuth: []
@@ -101,43 +116,63 @@ router.post(
  *         required: true
  *         schema:
  *           type: integer
- *         description: Draft transaction ID
  *         example: 10
+ *     responses:
+ *       200:
+ *         description: Transaction retrieved successfully
+ *       404:
+ *         description: Transaction not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.get(
+  '/:transactionId',
+  authMiddleware,
+  getTransactionController
+)
+
+/**
+ * =====================================================
+ * SUBMIT TRANSACTION
+ * =====================================================
+ */
+
+/**
+ * @swagger
+ * /api/transaction/{transactionId}/submit:
+ *   post:
+ *     summary: Submit transaction and start workflow
+ *     tags: [Transaction]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: transactionId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         example: 15
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
  *             example:
- *               student_name: أحمد محمد
- *               phone: 0999999999
- *               note: شكوى تأخير معاملة
+ *               final_note: تم التأكيد
  *     responses:
  *       200:
- *         description: Draft updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Draft updated
- *                 data:
- *                   type: object
+ *         description: Transaction submitted successfully
  *       400:
  *         description: Invalid request
  *       401:
  *         description: Unauthorized
  */
-router.put(
-  '/draft/:transactionId',
+router.post(
+  '/:transactionId/submit',
   authMiddleware,
-  updateDraftController
+  submitTransactionController
 )
+
 
 module.exports = router

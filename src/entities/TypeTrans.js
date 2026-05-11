@@ -4,11 +4,6 @@ module.exports = (sequelize, DataTypes) => {
 
   class TypeTrans extends sequelize.Sequelize.Model {
     static associate(models) {
-        TypeTrans.hasMany(models.Transaction, {
-            foreignKey: 'type_trans_id',
-            as: 'type_trans',
-          });
-
           TypeTrans.hasMany(models.ProcessDefinition, {
             foreignKey: 'type_trans_id',
             as: 'process_definitions',

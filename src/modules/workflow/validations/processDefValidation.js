@@ -10,7 +10,7 @@ const createProcessDefinitionSchema = Joi.object({
     .max(100)
     .required(),
 
-  code: Joi.string().optional(),
+  code: Joi.string().required(),
 
   filePath: Joi.string().required(),
 

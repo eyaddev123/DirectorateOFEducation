@@ -38,7 +38,9 @@ module.exports = (sequelize, DataTypes) => {
 
       code: {
         type: DataTypes.STRING,
-        allowNull: true
+        allowNull: true,
+        unique: true,
+
       },
 
       camunda_process_key: {
@@ -77,12 +79,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true
       },
-
       type_trans_id: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: true
       },
-
       priority: {
         type: DataTypes.INTEGER,
         defaultValue: 1
