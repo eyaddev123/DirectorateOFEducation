@@ -11,17 +11,11 @@ const swaggerOptions = {
       description: 'API documentation for Grass project'
     },
    servers: [
-  {
-    url:
-      process.env.NODE_ENV === 'production'
-        ? 'https://dev-education-directorate.abukm.com'
-        : `http://localhost:${process.env.PORT || 4000}`,
-    description:
-      process.env.NODE_ENV === 'production'
-        ? 'Production server'
-        : 'Local server'
-  }
-],
+      {
+        url: 'https://dev-education-directorate.abukm.com',
+        description: 'Production server'
+      }
+    ],
     tags: [
       { name: 'Auth', description: 'المصادقة وإدارة الحسابات (Authentication)' },
       { name: 'Calculation', description: 'العمليات الحسابية (calculations)' },
