@@ -2,12 +2,12 @@ const {
   ValidateCreateTypeProcess,
   ValidateUpdateTypeProcess
 } = require('../validations/typeProcessValidation')
-
+const { Op } = require('sequelize')
 const { TypeTrans } = require('../../../entities')
 const { TypeProcessInputDTO } = require('../dto/TypeProcessInputDTO')
 const { TypeProcessOutputDTO } = require('../dto/TypeProcessOutputDTO')
 
-// =================      CREATE       =================
+// =============================    CREAT     ========================
 async function createTypeProcessService(data) {
   const { error } = ValidateCreateTypeProcess(data)
 
@@ -66,9 +66,26 @@ async function updateTypeProcessService(data, id) {
 // ================= GET ALL =================
 async function getAllTypeProcessesService() {
   const rows = await TypeTrans.findAll({
+
     order: [['id', 'ASC']]
   }) 
   return rows.map(r => new TypeProcessOutputDTO(r)) 
+}
+
+//////////////////////////////////////////////////////////
+// get all type 
+
+async function getAllTypeProcessesService() {
+  const rows = await TypeTrans.findAll({
+    where: {
+      id: {
+        [Op.ne]: 1
+      }
+    },
+    order: [['id', 'ASC']]
+  })
+
+  return rows.map(r => new TypeProcessOutputDTO(r))
 }
 
 module.exports = {
