@@ -68,6 +68,10 @@ module.exports = {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.TYPETPROCESS_VIEW
       },
+          {
+        organization_department_roles_id: roleMap.CITIZEN,
+        permission_id: permMap.TYPETPROCESS_VIEW
+      },
       {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.FIELD_READ

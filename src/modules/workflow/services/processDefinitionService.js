@@ -205,6 +205,7 @@ async function getAuthProcesses (typeTransID, userId) {
   if (!typeTrans) {
     throw new Error('لا يوجد هذا النوع')
   }
+  
 
   // ✅ جلب أدوار المستخدم
   const userRoles = await UserRoleAssignment.findAll({
@@ -500,11 +501,23 @@ async function reviewProcess (processId, decision) {
     }
   }
 }
+//////////////////////////////////////
+async function getProcessByIdService(id) {
+  const processId = parseInt(id, 10)
 
+  const process = await ProcessDefinition.findByPk(processId)
+
+  if (!process) {
+    throw new Error('Process not found')
+  }
+
+  return process
+}
 module.exports = {
   setupProcessAfterCreation,
   createProcessDefinitionService,
   getAuthProcesses,
   getProcessDetailsWithValidation,
-  reviewProcess
+  reviewProcess,
+  getProcessByIdService
 }

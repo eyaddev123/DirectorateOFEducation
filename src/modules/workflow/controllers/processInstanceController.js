@@ -1,5 +1,5 @@
 const {
-  startProcessInstance
+  startWorkflow
 } = require('../services/processInstanceService')
 
 // =========================================
@@ -11,7 +11,7 @@ async function submitProcessInstanceController(req, res) {
 
     const { transactionId, processId } = req.params
 
-    const result = await startProcessInstance(
+    const result = await startWorkflow(
       transactionId,
       processId,
       req.body

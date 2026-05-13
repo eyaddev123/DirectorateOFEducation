@@ -9,12 +9,6 @@ module.exports = (sequelize, DataTypes) => {
         onDelete: 'CASCADE'
       })
 
-      Transaction.belongsTo(models.TypeTrans, {
-        foreignKey: 'type_trans_id',
-        as: 'type_trans',
-        onDelete: 'CASCADE'
-      })
-
       Transaction.hasMany(models.ProcessInstanceStage, {
         foreignKey: 'transaction_id',
         as: 'stages'
@@ -34,9 +28,9 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false
       },
 
-      type_trans_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false
+      code: {
+        type: DataTypes.STRING,
+        allowNull: true
       },
 
       version: {
@@ -52,6 +46,7 @@ module.exports = (sequelize, DataTypes) => {
       status: {
         type: DataTypes.ENUM(
           'draft',
+          'submitted',
           'in_progress',
           'completed',
           'rejected',

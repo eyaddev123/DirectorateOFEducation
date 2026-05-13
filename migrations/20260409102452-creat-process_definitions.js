@@ -17,7 +17,8 @@ module.exports = {
 
       code: {
         type: Sequelize.STRING,
-        allowNull: true
+        allowNull: true,
+        unique: true
       },
 
       camunda_process_key: {
