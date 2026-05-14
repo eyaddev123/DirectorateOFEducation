@@ -51,7 +51,7 @@ async function createOrUpdateDraft ({ userId, processId, data }) {
     // ===================================
     // EVENT
     // ===================================
-
+console.log('BEFORE EVENT')
     await eventBus.publish(
       EVENTS.TRANSACTION_UPDATED,
 
@@ -62,7 +62,7 @@ async function createOrUpdateDraft ({ userId, processId, data }) {
         processCode
       }
     )
-
+console.log('AFTER EVENT')
     return {
       isNew: false,
       draft

@@ -22,6 +22,16 @@ setupSwagger(app)
 const authRoutes = require('./modules/auth/routes/auth')
 app.use('/api/auth', authRoutes)
 
+
+//auth client:
+const authClientRoutes =
+  require('./modules/auth/routes/internal/authClient')
+
+app.use(
+  '/internal/users',
+  authClientRoutes
+)
+
 //==========================================================================
 //=========================== repositories services ========================
 
@@ -48,6 +58,25 @@ app.use('/api/department', departmentRoutes)
 
 const roleRoutes = require('./modules/organization/routes/role')
 app.use('/api/role', roleRoutes)
+
+// organization client 
+
+const organizationClientRoutes =
+  require('./modules/organization/routes/internal/Organization')
+app.use(
+  '/organizations',
+  organizationClientRoutes
+)
+
+//  OrgDeptRole
+
+const OrgDeptRoleClientRoutes =
+  require('./modules/organization/routes/internal/OrgDeptRoles')
+app.use(
+  '/internal/org-dept-roles',
+  OrgDeptRoleClientRoutes
+)
+
 //==========================================================================
 //======================= workflow services ================================
 
@@ -62,6 +91,14 @@ app.use('/api/stage_config', stageConfigRoutes)
 
 const processDefinitionsRoutes = require('./modules/workflow/routes/processDefinition')
 app.use('/api/process_definitions', processDefinitionsRoutes)
+
+//process client
+const internalProcessRoutes =
+  require('./modules/workflow/routes/internal/processClient')
+app.use(
+  '/internal/process_definitions',
+  internalProcessRoutes
+)
 
 //===========================================================================
 //============================= transaction services ========================

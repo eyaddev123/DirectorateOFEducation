@@ -7,20 +7,42 @@ const sequelize = require('../core/config/database')
 
 const db = {}
 
+// 🔥 scan domain folders
 fs.readdirSync(__dirname)
-  .filter((file) => file.endsWith('.js') && file !== 'index.js')
-  .forEach((file) => {
-    const defineModel = require(path.join(__dirname, file))
-    const model = defineModel(sequelize, Sequelize.DataTypes)
-    db[model.name] = model
+  .forEach((folder) => {
+
+    const folderPath =
+      path.join(__dirname, folder)
+
+    // skip files (only folders)
+    if (!fs.lstatSync(folderPath).isDirectory()) {
+      return
+    }
+
+    // read models inside each domain
+    fs.readdirSync(folderPath)
+      .filter(file => file.endsWith('.js'))
+      .forEach(file => {
+
+        const defineModel =
+          require(path.join(folderPath, file))
+
+        const model =
+          defineModel(sequelize, Sequelize.DataTypes)
+
+        db[model.name] = model
+      })
   })
 
-Object.keys(db).forEach((modelName) => {
+// 🔗 associations (after all models loaded)
+Object.keys(db).forEach(modelName => {
+
   if (typeof db[modelName].associate === 'function') {
     db[modelName].associate(db)
   }
 })
 
+// attach sequelize instance
 db.sequelize = sequelize
 db.Sequelize = Sequelize
 
