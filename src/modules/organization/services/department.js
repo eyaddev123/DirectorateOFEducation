@@ -38,7 +38,7 @@ async function createDepartmentService(data) {
     name: data.name,
     organization_id: data.organization_id,
     parent_id: data.parent_id ?? null,
-    is_active: data.is_active ?? true
+    is_active: true
   })
 
   return department
@@ -99,9 +99,32 @@ async function updateDepartmentService(data, id) {
   if (data.name !== undefined) payload.name = data.name
   if (data.organization_id !== undefined) payload.organization_id = data.organization_id
   if (data.parent_id !== undefined) payload.parent_id = data.parent_id
-  if (data.is_active !== undefined) payload.is_active = data.is_active
 
   await department.update(payload)
+  await department.reload()
+
+  return department
+}
+
+// ================= TOGGLE STATUS =================
+async function toggleDepartmentStatusService(id) {
+  const departmentId = parseInt(id, 10)
+
+  if (!Number.isInteger(departmentId) || departmentId < 1) {
+    const err = new Error('معرّف القسم غير صالح')
+    err.statusCode = 400
+    throw err
+  }
+
+  const department = await Department.findByPk(departmentId)
+
+  if (!department) {
+    const err = new Error('القسم غير موجود')
+    err.statusCode = 404
+    throw err
+  }
+
+  await department.update({ is_active: !department.is_active })
   await department.reload()
 
   return department
@@ -230,5 +253,6 @@ module.exports = {
   deleteDepartmentService,
   getAllDepartmentsService,
   getDepartmentByIdService,
-  getLeafDepartmentsByOrganizationService
+  getLeafDepartmentsByOrganizationService,
+  toggleDepartmentStatusService
 }

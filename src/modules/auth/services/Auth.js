@@ -2,6 +2,7 @@
 
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const { Op } = require('sequelize')
 // const nodemailer = require('nodemailer')
 
 const { v4: uuidv4 } = require('uuid') // ⬅️ استيراد UUID
@@ -59,8 +60,11 @@ async function registerEmployee(userData) {
   const { error } = validateRegisterEmp(userData)
   if (error) throw new Error(error.details.map(d => d.message).join(' | '))
 
-  const existingUser = await User.findOne({ where: { email: userData.email } })
-  if (existingUser) throw new Error('Email already exists')
+  const existingEmail = await User.findOne({ where: { email: userData.email } })
+  if (existingEmail) throw new Error('البريد الإلكتروني مستخدم مسبقاً، الرجاء استخدام بريد آخر')
+
+  const existingUserName = await User.findOne({ where: { userName: userData.userName } })
+  if (existingUserName) throw new Error('اسم المستخدم مستخدم مسبقاً، الرجاء اختيار اسم آخر')
 
   const orgDeptRole = await OrgDeptRole.findOne({
     where: {
@@ -114,13 +118,29 @@ async function registerCitizen(userData) {
       throw new Error(error.details.map(d => d.message).join(', '))
     }
 
-    const existingUser = await User.findOne({
-      where: { email: userData.email },
+    // نبحث عن أي مستخدم يتعارض مع البيانات الجديدة (نفس البريد أو نفس الاسم)
+    const conflictingUsers = await User.findAll({
+      where: {
+        [Op.or]: [
+          { email: userData.email },
+          { userName: userData.userName }
+        ]
+      },
       transaction
     })
 
-    if (existingUser) {
-      throw new Error('Email already exists')
+    for (const existing of conflictingUsers) {
+      // سجل مفعّل → الحساب قائم فعلاً، نمنع التسجيل
+      if (existing.is_active) {
+        if (existing.email === userData.email) {
+          throw new Error('البريد الإلكتروني مستخدم مسبقاً، الرجاء استخدام بريد آخر')
+        }
+        throw new Error('اسم المستخدم مستخدم مسبقاً، الرجاء اختيار اسم آخر')
+      }
+
+      // سجل غير مفعّل (registration مهجور لم يكمل OTP) → ننظّفه قبل الإنشاء الجديد
+      await OtpCode.destroy({ where: { user_id: existing.id }, transaction })
+      await existing.destroy({ transaction }) // UserRoleAssignment يُحذف تلقائياً (CASCADE)
     }
 
     const orgDeptRole = await OrgDeptRole.findOne({
@@ -131,7 +151,7 @@ async function registerCitizen(userData) {
     })
 
     if (!orgDeptRole) {
-      throw new Error('CITIZEN role not found')
+      throw new Error('دور المواطن (CITIZEN) غير معرّف في النظام. يرجى التواصل مع الدعم الفني.')
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10)
@@ -154,7 +174,7 @@ async function registerCitizen(userData) {
     await transaction.commit()
 
     if (!user.phone_number) {
-      throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب')
+      throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب. يرجى التواصل مع الدعم الفني')
     }
 
     const session_id = await saveAndSendOtp(user.id, user.phone_number)
@@ -252,13 +272,13 @@ async function login(userData) {
   const inputDTO = new LoginInputDTO(userData)
 
   const user = await User.findOne({ where: { userName: inputDTO.userName } })
-  if (!user) throw new Error('Invalid userName or password')
+  if (!user) throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة')
 
   const isValid = await bcrypt.compare(inputDTO.password, user.password)
-  if (!isValid) throw new Error('Invalid userName or password')
+  if (!isValid) throw new Error('اسم المستخدم أو كلمة المرور غير صحيحة')
 
-  if (!user.is_active) throw new Error('الحساب غير مفعّل. سجّل من جديد أو تواصل مع الدعم')
-  if (!user.phone_number) throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب')
+  if (!user.is_active) throw new Error('الحساب غير مفعّل. يرجى إكمال عملية التحقق أو التواصل مع الدعم الفني')
+  if (!user.phone_number) throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب. يرجى التواصل مع الدعم الفني')
 
   const session_id = await saveAndSendOtp(user.id, user.phone_number)
 
@@ -316,15 +336,15 @@ async function verifyRegisterOtp({ session_id, otp }) {
   if (error) throw new Error(error.details.map(d => d.message).join(', '))
 
   const record = await OtpCode.findOne({ where: { session_id } })
-  if (!record) throw new Error('session_id غير صحيح')
-  if (record.otp !== otp) throw new Error('رمز OTP غير صحيح')
+  if (!record) throw new Error('جلسة التحقق غير صالحة أو منتهية. يرجى إعادة المحاولة')
+  if (record.otp !== otp) throw new Error('رمز التحقق غير صحيح. يرجى التأكد من الرمز المرسل')
   if (new Date() > record.expires_at) {
     await record.destroy()
-    throw new Error('رمز OTP منتهي الصلاحية')
+    throw new Error('انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد')
   }
 
   const user = await User.findByPk(record.user_id)
-  if (!user) throw new Error('المستخدم غير موجود')
+  if (!user) throw new Error('الحساب غير موجود. ربما تم حذفه. يرجى التواصل مع الدعم الفني')
 
   await user.update({ is_active: true })
   await record.destroy()
@@ -345,15 +365,15 @@ async function verifyLoginOtp({ session_id, otp }) {
   if (error) throw new Error(error.details.map(d => d.message).join(', '))
 
   const record = await OtpCode.findOne({ where: { session_id } })
-  if (!record) throw new Error('session_id غير صحيح')
-  if (record.otp !== otp) throw new Error('رمز OTP غير صحيح')
+  if (!record) throw new Error('جلسة التحقق غير صالحة أو منتهية. يرجى إعادة المحاولة')
+  if (record.otp !== otp) throw new Error('رمز التحقق غير صحيح. يرجى التأكد من الرمز المرسل')
   if (new Date() > record.expires_at) {
     await record.destroy()
-    throw new Error('رمز OTP منتهي الصلاحية')
+    throw new Error('انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد')
   }
 
   const user = await User.findByPk(record.user_id)
-  if (!user) throw new Error('المستخدم غير موجود')
+  if (!user) throw new Error('الحساب غير موجود. ربما تم حذفه. يرجى التواصل مع الدعم الفني')
 
   await record.destroy()
 

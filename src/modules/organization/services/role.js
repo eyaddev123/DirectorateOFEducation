@@ -94,7 +94,7 @@ async function createRoleService(data) {
         organization_id: data.organization_id,
         department_id: data.department_id,
         parent_id: data.parent_id ?? null,
-        is_active: data.is_active ?? true,
+        is_active: true,
         camunda_group_key: buildCamundaGroupKey(
           role.code,
           data.organization_id,
@@ -213,7 +213,6 @@ async function updateRoleService(data, id) {
   if (data.organization_id !== undefined) payload.organization_id = data.organization_id
   if (data.department_id !== undefined) payload.department_id = data.department_id
   if (data.parent_id !== undefined) payload.parent_id = data.parent_id
-  if (data.is_active !== undefined) payload.is_active = data.is_active
 
   if (data.organization_id !== undefined || data.department_id !== undefined) {
     payload.camunda_group_key = buildCamundaGroupKey(
@@ -224,6 +223,38 @@ async function updateRoleService(data, id) {
   }
 
   await orgDeptRole.update(payload)
+
+  const fullAssignment = await OrgDeptRole.findByPk(orgDeptRoleId, {
+    include: [
+      { model: Role, as: 'role' },
+      { model: Organization, as: 'organization' },
+      { model: Department, as: 'department' },
+      { model: OrgDeptRole, as: 'parent' }
+    ]
+  })
+
+  return fullAssignment
+}
+
+// ================= TOGGLE STATUS =================
+async function toggleRoleStatusService(id) {
+  const orgDeptRoleId = parseInt(id, 10)
+
+  if (!Number.isInteger(orgDeptRoleId) || orgDeptRoleId < 1) {
+    const err = new Error('المعرّف غير صالح')
+    err.statusCode = 400
+    throw err
+  }
+
+  const orgDeptRole = await OrgDeptRole.findByPk(orgDeptRoleId)
+
+  if (!orgDeptRole) {
+    const err = new Error('السجل غير موجود')
+    err.statusCode = 404
+    throw err
+  }
+
+  await orgDeptRole.update({ is_active: !orgDeptRole.is_active })
 
   const fullAssignment = await OrgDeptRole.findByPk(orgDeptRoleId, {
     include: [
@@ -350,5 +381,6 @@ module.exports = {
   deleteRoleService,
   getAllRolesService,
   getRoleByIdService,
-  getRolesByDepartmentService
+  getRolesByDepartmentService,
+  toggleRoleStatusService
 }

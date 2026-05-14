@@ -635,10 +635,6 @@ const swaggerOptions = {
               type: 'integer',
               nullable: true,
               example: null
-            },
-            is_active: {
-              type: 'boolean',
-              example: true
             }
           }
         },
@@ -661,10 +657,6 @@ const swaggerOptions = {
               type: 'integer',
               nullable: true,
               example: 3
-            },
-            is_active: {
-              type: 'boolean',
-              example: false
             }
           }
         },
@@ -802,10 +794,6 @@ const swaggerOptions = {
               nullable: true,
               example: null,
               description: 'معرّف الدور الأب من organization_department_roles'
-            },
-            is_active: {
-              type: 'boolean',
-              example: true
             }
           }
         },
@@ -826,10 +814,6 @@ const swaggerOptions = {
               type: 'integer',
               nullable: true,
               example: 5
-            },
-            is_active: {
-              type: 'boolean',
-              example: false
             }
           }
         },

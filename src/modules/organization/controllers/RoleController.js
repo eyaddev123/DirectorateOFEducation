@@ -5,7 +5,8 @@ const {
   deleteRoleService,
   getAllRolesService,
   getRoleByIdService,
-  getRolesByDepartmentService
+  getRolesByDepartmentService,
+  toggleRoleStatusService
 } = require('../services/role')
 
 // ================= CREATE =================
@@ -49,6 +50,25 @@ const deleteRole = asyncHandler(async (req, res) => {
     return res.status(200).json({
       success: true,
       message: 'تم حذف الدور بنجاح',
+      data: result
+    })
+  } catch (err) {
+    return res.status(err.statusCode || 400).json({
+      success: false,
+      message: err.message
+    })
+  }
+})
+
+// ================= TOGGLE STATUS =================
+const toggleRoleStatus = asyncHandler(async (req, res) => {
+  try {
+    const result = await toggleRoleStatusService(req.params.id)
+    return res.status(200).json({
+      success: true,
+      message: result.is_active
+        ? 'تم تفعيل الدور بنجاح'
+        : 'تم تعطيل الدور بنجاح',
       data: result
     })
   } catch (err) {
@@ -116,5 +136,6 @@ module.exports = {
   deleteRole,
   getAllRoles,
   getRoleById,
-  getRolesByDepartment
+  getRolesByDepartment,
+  toggleRoleStatus
 }
