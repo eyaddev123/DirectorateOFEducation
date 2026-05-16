@@ -1,6 +1,8 @@
 const {
 
-  createOrUpdateDraft,
+  UpdateDraft,
+
+  createDraft,
 
   getUserDraftByProcess,
 
@@ -11,10 +13,10 @@ const {
 } = require('../services/transactionService')
 
 // ======================================================
-// CREATE OR UPDATE DRAFT
+// CREATE E DRAFT
 // ======================================================
 
-async function createOrUpdateDraftController(
+async function createDraftController(
   req,
   res,
   next
@@ -30,11 +32,45 @@ async function createOrUpdateDraftController(
     } = req.params
 
     const result =
-      await createOrUpdateDraft({
-
+      await createDraft({
         userId,
 
-        processId,
+        processId
+      })
+
+    return res.status(200).json({
+
+      success: true,
+      message:'تمت العملية بنجاح',
+      data: result
+    
+    })
+
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    })}
+}
+
+// ======================================================
+// CREATE OR UPDATE DRAFT
+// ======================================================
+
+async function UpdateDraftController(
+  req,
+  res,
+  next
+) {
+
+  try {
+    const {
+      transId
+    } = req.params
+
+    const result =
+      await UpdateDraft({
+        transId,
 
         data: req.body
       })
@@ -53,7 +89,6 @@ async function createOrUpdateDraftController(
       message: err.message
     })}
 }
-
 // ======================================================
 // GET USER DRAFT BY PROCESS
 // ======================================================
@@ -180,7 +215,9 @@ async function submitTransactionController(
 
     module.exports = {
 
-  createOrUpdateDraftController,
+  createDraftController,
+
+  UpdateDraftController,
 
   getUserDraftByProcessController,
 

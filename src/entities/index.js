@@ -3,23 +3,29 @@
 const fs = require('fs')
 const path = require('path')
 const Sequelize = require('sequelize')
-const sequelize = require('../core/config/database')
+
+const sequelize =
+  require('../core/config/database')
+
+const DataTypes = Sequelize.DataTypes
 
 const db = {}
 
-// 🔥 scan domain folders
+// =====================================
+// LOAD DOMAIN MODELS
+// =====================================
+
 fs.readdirSync(__dirname)
   .forEach((folder) => {
 
     const folderPath =
       path.join(__dirname, folder)
 
-    // skip files (only folders)
+    // skip non-folders
     if (!fs.lstatSync(folderPath).isDirectory()) {
       return
     }
 
-    // read models inside each domain
     fs.readdirSync(folderPath)
       .filter(file => file.endsWith('.js'))
       .forEach(file => {
@@ -28,13 +34,26 @@ fs.readdirSync(__dirname)
           require(path.join(folderPath, file))
 
         const model =
-          defineModel(sequelize, Sequelize.DataTypes)
+          defineModel(sequelize, DataTypes)
 
         db[model.name] = model
       })
   })
 
-// 🔗 associations (after all models loaded)
+// =====================================
+// OUTBOX MODEL
+// =====================================
+
+const OutboxEventModel =
+  require('../core/shared/outbox/models/OutboxEvent')
+
+db.OutboxEvent =
+  OutboxEventModel(sequelize, DataTypes)
+
+// =====================================
+// ASSOCIATIONS
+// =====================================
+
 Object.keys(db).forEach(modelName => {
 
   if (typeof db[modelName].associate === 'function') {
@@ -42,7 +61,10 @@ Object.keys(db).forEach(modelName => {
   }
 })
 
-// attach sequelize instance
+// =====================================
+// EXPORTS
+// =====================================
+
 db.sequelize = sequelize
 db.Sequelize = Sequelize
 

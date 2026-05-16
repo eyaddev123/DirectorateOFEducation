@@ -1,16 +1,14 @@
 const { Transaction } = require('../../../entities')
 
-async function findDraft(userId, typeTransId) {
+async function findDraft(typeTransId) {
   return Transaction.findOne({
     where: {
-      user_id: userId,
-      type_trans_id: typeTransId,
+      id: typeTransId,
       status: 'draft'
     },
     order: [['created_at', 'DESC']]
   })
 }
-
 
 async function findDraftByCode(
   userId,

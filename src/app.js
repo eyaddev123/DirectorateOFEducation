@@ -115,7 +115,16 @@ app.use(
   internalTransactionRoutes
 )
 
+
+
 // ====================== ERROR HANDLER ======================
 app.use(errorHandler)
+
+// 👇 هنا مهم جداً
+const { startOutboxWorker } =
+  require('./core/shared/outbox/workers/outboxWorker')
+
+startOutboxWorker()
+
 
 module.exports = app

@@ -1,7 +1,8 @@
 const {
   OrgDeptRole
 } = require('../../../../entities')
-
+const Sequelize = require('sequelize')
+const Op = Sequelize.Op
 class OrgDeptRoleRepository {
 
 //////////////////////////////////////////////////
