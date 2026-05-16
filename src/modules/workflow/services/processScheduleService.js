@@ -4,8 +4,8 @@ const Sequelize = require('sequelize')
 
 const Op = Sequelize.Op
 
-const { ProcessDefinition } =
-  require('../../../entities')
+const processDefinitionRepository =
+  require('../repositories/processRepository')
 
 async function updateProcessActivationStatus() {
 
@@ -14,31 +14,10 @@ async function updateProcessActivationStatus() {
   console.log('NOW:', now)
 
   const [activatedCount] =
-    await ProcessDefinition.update(
-      { is_active: true },
-      {
-        where: {
-          start_date: {
-            [Op.lte]: now
-          },
-          approval_status: 'APPROVED',
-          is_active: false
-        }
-      }
-    )
+    await processDefinitionRepository.activateProcesses(now)
 
   const [deactivatedCount] =
-    await ProcessDefinition.update(
-      { is_active: false },
-      {
-        where: {
-          end_date: {
-            [Op.lt]: now
-          },
-          is_active: true
-        }
-      }
-    )
+    await processDefinitionRepository.deactivateProcesses(now)
 
   console.log('Activated:', activatedCount)
 
