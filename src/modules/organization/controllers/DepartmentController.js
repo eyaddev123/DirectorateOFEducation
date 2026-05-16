@@ -6,7 +6,8 @@ const {
   deleteDepartmentService,
   getAllDepartmentsService,
   getDepartmentByIdService,
-  getLeafDepartmentsByOrganizationService
+  getLeafDepartmentsByOrganizationService,
+  toggleDepartmentStatusService
 } = require('../services/department')
 
 // ================= CREATE =================
@@ -94,6 +95,25 @@ const getDepartmentById = asyncHandler(async (req, res) => {
   }
 })
 
+// ================= TOGGLE STATUS =================
+const toggleDepartmentStatus = asyncHandler(async (req, res) => {
+  try {
+    const result = await toggleDepartmentStatusService(req.params.id)
+    return res.status(200).json({
+      success: true,
+      message: result.is_active
+        ? 'تم تفعيل القسم بنجاح'
+        : 'تم تعطيل القسم بنجاح',
+      data: result
+    })
+  } catch (err) {
+    return res.status(err.statusCode || 400).json({
+      success: false,
+      message: err.message
+    })
+  }
+})
+
 // ================= GET LEAVES BY ORGANIZATION =================
 const getLeafDepartmentsByOrganization = asyncHandler(async (req, res) => {
   try {
@@ -119,5 +139,6 @@ module.exports = {
   deleteDepartment,
   getAllDepartments,
   getDepartmentById,
-  getLeafDepartmentsByOrganization
+  getLeafDepartmentsByOrganization,
+  toggleDepartmentStatus
 }

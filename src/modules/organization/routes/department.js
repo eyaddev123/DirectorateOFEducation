@@ -7,7 +7,8 @@ const {
   deleteDepartment,
   getAllDepartments,
   getDepartmentById,
-  getLeafDepartmentsByOrganization
+  getLeafDepartmentsByOrganization,
+  toggleDepartmentStatus
 } = require('../controllers/DepartmentController')
 
 const { authMiddleware, authorize } = require('../../../core/middleware/authMiddleware')
@@ -42,69 +43,69 @@ router.post(
   createDepartment
 )
 
-/**
- * @swagger
- * /api/department/{id}:
- *   put:
- *     summary: تعديل قسم
- *     tags: [Department]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/DepartmentUpdate'
- *     responses:
- *       200:
- *         description: updated
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/DepartmentEnvelope'
- */
-router.put(
-  '/:id',
-  authMiddleware,
-  authorize('DEPARTMENT_UPDATE'),
-  updateDepartment
-)
+// /**
+//  * @swagger
+//  * /api/department/{id}:
+//  *   put:
+//  *     summary: تعديل قسم
+//  *     tags: [Department]
+//  *     security:
+//  *       - bearerAuth: []
+//  *     parameters:
+//  *       - in: path
+//  *         name: id
+//  *         required: true
+//  *         schema:
+//  *           type: integer
+//  *     requestBody:
+//  *       required: true
+//  *       content:
+//  *         application/json:
+//  *           schema:
+//  *             $ref: '#/components/schemas/DepartmentUpdate'
+//  *     responses:
+//  *       200:
+//  *         description: updated
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               $ref: '#/components/schemas/DepartmentEnvelope'
+//  */
+// router.put(
+//   '/:id',
+//   authMiddleware,
+//   authorize('DEPARTMENT_UPDATE'),
+//   updateDepartment
+// )
 
-/**
- * @swagger
- * /api/department/{id}:
- *   delete:
- *     summary: حذف قسم
- *     tags: [Department]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: deleted
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/DepartmentDeleteEnvelope'
- */
-router.delete(
-  '/:id',
-  authMiddleware,
-  authorize('DEPARTMENT_DELETE'),
-  deleteDepartment
-)
+// /**
+//  * @swagger
+//  * /api/department/{id}:
+//  *   delete:
+//  *     summary: حذف قسم
+//  *     tags: [Department]
+//  *     security:
+//  *       - bearerAuth: []
+//  *     parameters:
+//  *       - in: path
+//  *         name: id
+//  *         required: true
+//  *         schema:
+//  *           type: integer
+//  *     responses:
+//  *       200:
+//  *         description: deleted
+//  *         content:
+//  *           application/json:
+//  *             schema:
+//  *               $ref: '#/components/schemas/DepartmentDeleteEnvelope'
+//  */
+// router.delete(
+//   '/:id',
+//   authMiddleware,
+//   authorize('DEPARTMENT_DELETE'),
+//   deleteDepartment
+// )
 
 /**
  * @swagger
@@ -157,6 +158,36 @@ router.get(
   authMiddleware,
   authorize('DEPARTMENT_VIEW'),
   getLeafDepartmentsByOrganization
+)
+
+/**
+ * @swagger
+ * /api/department/{id}/toggle-status:
+ *   patch:
+ *     summary: قلب حالة تفعيل القسم (is_active)
+ *     description: يقلب قيمة is_active من true إلى false أو العكس.
+ *     tags: [Department]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: toggled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/DepartmentEnvelope'
+ */
+router.patch(
+  '/:id/toggle-status',
+  authMiddleware,
+  authorize('DEPARTMENT_TOGGLE_STATUS'),
+  toggleDepartmentStatus
 )
 
 /**

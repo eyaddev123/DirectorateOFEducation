@@ -209,6 +209,10 @@ module.exports = {
       },
       {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.DEPARTMENT_TOGGLE_STATUS
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.ROLE_CREATE
       },
       {
@@ -222,6 +226,10 @@ module.exports = {
       {
         organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
         permission_id: permMap.ROLE_VIEW
+      },
+      {
+        organization_department_roles_id: roleMap.TECHNICAL_OFFICER,
+        permission_id: permMap.ROLE_TOGGLE_STATUS
       }
     ]
 
