@@ -1,4 +1,5 @@
 'use strict'
+const orgDeptRolesClient = require('../../../core/shared/clients/organization/orgDeptRolesClient')
 
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
@@ -8,9 +9,7 @@ const { v4: uuidv4 } = require('uuid') // ⬅️ استيراد UUID
 const {
   User,
   OtpCode,
-  OrgDeptRole,
   UserRoleAssignment,
-  Role,
 } = require('../../../entities')
 
 const {
@@ -62,12 +61,10 @@ async function registerEmployee(userData) {
   const existingUser = await User.findOne({ where: { email: userData.email } })
   if (existingUser) throw new Error('Email already exists')
 
-  const orgDeptRole = await OrgDeptRole.findOne({
-    where: {
-      organization_id: userData.organization_id,
-      department_id: userData.department_id,
-      role_id: userData.role_id
-    }
+  const orgDeptRole = await orgDeptRolesClient.findOrgDeptRole({
+    organization_id: normalize(a.organization_id),
+    department_id: normalize(a.department_id),
+    role_id: a.role_id
   })
 
   if (!orgDeptRole) {
@@ -123,12 +120,8 @@ async function registerCitizen(userData) {
       throw new Error('Email already exists')
     }
 
-    const orgDeptRole = await OrgDeptRole.findOne({
-      where: {
-        camunda_group_key: 'CITIZEN'
-      },
-      transaction
-    })
+ const orgDeptRole =
+  await orgDeptRolesClient.getCitizenRole()
 
     if (!orgDeptRole) {
       throw new Error('CITIZEN role not found')
@@ -194,12 +187,8 @@ async function registerCitizen(userData) {
   //     throw new Error('Email already exists')
   //   }
 
-  //   const orgDeptRole = await OrgDeptRole.findOne({
-  //     where: {
-  //       camunda_group_key: 'CITIZEN'
-  //     },
-  //     transaction
-  //   })
+  // const orgDeptRole =
+  // await orgDeptRolesClient.getCitizenRole()
 
   //   if (!orgDeptRole) {
   //     throw new Error('CITIZEN role not found')

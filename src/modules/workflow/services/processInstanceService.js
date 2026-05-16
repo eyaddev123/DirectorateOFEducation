@@ -1,69 +1,44 @@
-const axios = require('axios')
+const transactionClient = require('../../../core/shared/clients/transaction/transactionClient')
 
-const transactionClient =
-  require('../../../core/shared/clients/transaction/transactionClient')
+const eventBus = require('../../../core/shared/events/eventBus')
 
-const eventBus =
-  require('../../../core/shared/events/eventBus')
+const EVENTS = require('../../../core/shared/events/types')
 
-const EVENTS =
-  require('../../../core/shared/events/types')
+const processRepository = require('../repositories/processRepository')
 
-const { CAMUNDA_URL } = require('../../../core/config/camunda')
+const camundaClient = require('../../../core/shared/clients/camunda/camundaClient')
 
-// ======================================================
-// START WORKFLOW
-// ======================================================
- 
+const stageRepository = require('../repositories/stageRepository')
 
-const {
-  ProcessDefinition,
-  ProcessInstance,
-  Stage,
-  ProcessInstanceStage
-} = require('../../../entities')
+const processInstanceStageRepository = require('../repositories/processInstanceStageRepository')
 
-
+const processInstanceRepository = require('../repositories/processInstanceRepository')
 // ======================================================
 // START WORKFLOW
 // ======================================================
 
-async function startWorkflow ({
-  transactionId,
-  processCode
-}) {
-
+async function startWorkflow ({ transactionId, processCode }) {
   // =====================================
-  // GET TRANSACTION
+  // transaction + process
   // =====================================
 
-  const transaction =
-    await transactionClient.getTransactionById(
-      transactionId
-    )
+  const [transaction, process] = await Promise.all([
+    transactionClient.getTransactionById(transactionId),
+
+    processRepository.findByCode(processCode)
+  ])
+
+  // =====================================
+  // validations
+  // =====================================
 
   if (!transaction) {
     throw new Error('Transaction not found')
   }
 
-  // =====================================
-  // VALIDATE TRANSACTION
-  // =====================================
-
   if (transaction.status !== 'submitted') {
-    throw new Error(
-      'Transaction must be submitted first'
-    )
+    throw new Error('Transaction must be submitted first')
   }
-
-  // =====================================
-  // GET PROCESS
-  // =====================================
-
-  const process =
-    await ProcessDefinition.findOne({
-      where : {code :processCode}
-    })
 
   if (!process) {
     throw new Error('Process not found')
@@ -74,163 +49,78 @@ async function startWorkflow ({
   }
 
   if (!process.camunda_process_key) {
-    throw new Error(
-      'Missing Camunda process key'
-    )
+    throw new Error('Missing Camunda process key')
   }
 
-  console.log(
-    'CAMUNDA KEY:',
-    process.camunda_process_key
+  // =====================================
+  // start camunda
+  // =====================================
+
+  const camundaProcess = await camundaClient.startProcess(
+    process.camunda_process_key,
+    transaction.id
   )
 
   // =====================================
-  // START CAMUNDA PROCESS
+  // create process instance
   // =====================================
 
-  const response = await axios.post(
+  const processInstance = await processInstanceRepository.create({
+    process_definition_id: process.id,
 
-    `${CAMUNDA_URL}/process-definition/key/${process.camunda_process_key}/start`,
+    transaction_id: transaction.id,
 
-    {
-      variables: {
-        transactionId: {
-          value: transaction.id,
-          type: 'Integer'
-        }
-      }
-    }
-  )
+    camunda_process_instance_id: camundaProcess.id,
 
-  const camundaProcessInstanceId =
-    response.data.id
+    status: 'running'
+  })
 
   // =====================================
-  // CREATE PROCESS INSTANCE
+  // get first task
   // =====================================
 
-  const processInstance =
-    await ProcessInstance.create({
+  const tasks = await camundaClient.getActiveTasks(camundaProcess.id)
 
-      process_definition_id: process.id,
-
-      transaction_id: transaction.id,
-
-      camunda_process_instance_id:
-        camundaProcessInstanceId,
-
-      status: 'running'
-    })
+  const firstTask = tasks?.[0]
 
   // =====================================
-  // GET FIRST TASK
-  // =====================================
-
-  const tasksRes = await axios.get(
-    `${CAMUNDA_URL}/task`,
-    {
-      params: {
-        processInstanceId:
-          camundaProcessInstanceId
-      }
-    }
-  )
-
-  const tasks = tasksRes.data
-
-  const firstTask =
-    tasks.length ? tasks[0] : null
-
-  // =====================================
-  // AUTO COMPLETE FIRST TASK
+  // auto complete
   // =====================================
 
   if (firstTask) {
-
-    console.log(
-      'AUTO COMPLETE TASK:',
-      firstTask.name
-    )
-
-    await axios.post(
-
-     `${CAMUNDA_URL}/task/${firstTask.id}/complete`,
-
-      {
-        variables: {
-          transactionId: {
-            value: transaction.id,
-            type: 'Integer'
-          }
-        }
-      }
-    )
+    await camundaClient.completeTask(firstTask.id, transaction.id)
   }
 
   // =====================================
-  // GET CURRENT ACTIVE TASK
+  // current task
   // =====================================
 
-  const currentTasksRes = await axios.get(
-    `${CAMUNDA_URL}/task`,
-    {
-      params: {
-        processInstanceId:
-          camundaProcessInstanceId
-      }
-    }
-  )
+  const currentTasks = await camundaClient.getActiveTasks(camundaProcess.id)
 
-  const currentTasks =
-    currentTasksRes.data
-
-  const currentTask =
-    currentTasks.length
-      ? currentTasks[0]
-      : null
+  const currentTask = currentTasks?.[0]
 
   // =====================================
-  // MAP CURRENT STAGE
+  // map current stage
   // =====================================
 
   if (currentTask) {
+    const stage = await stageRepository.findByCodeAndProcess(
+      process.id,
 
-    const stage = await Stage.findOne({
-
-      where: {
-
-        process_definition_id:
-          process.id,
-
-        code:
-          currentTask.taskDefinitionKey
-      }
-    })
+      currentTask.taskDefinitionKey
+    )
 
     if (stage) {
-
-      // =================================
-      // UPDATE CURRENT STAGE
-      // =================================
-
-      await processInstance.update({
+      await processInstanceRepository.update(processInstance.id, {
         current_stage_id: stage.id
       })
 
-      // =================================
-      // CREATE STAGE HISTORY
-      // =================================
+      await processInstanceStageRepository.create({
+        transaction_id: transaction.id,
 
-      await ProcessInstanceStage.create({
+        stage_code: stage.code,
 
-        transaction_id:
-          transaction.id,
-
-        stage_code:
-          stage.code,
-
-        stage_name:
-          stage.name,
+        stage_name: stage.name,
 
         status: 'pending'
       })
@@ -238,49 +128,40 @@ async function startWorkflow ({
   }
 
   // =====================================
-  // UPDATE TRANSACTION STATUS
+  // update transaction
   // =====================================
 
-  await transactionClient.updateStatus(
+  await transactionClient.updateStatus(transactionId, 'in_progress')
+
+  // =====================================
+  // publish event
+  // =====================================
+
+  await eventBus.publish(EVENTS.WORKFLOW_STARTED, {
     transactionId,
-    'in_progress'
-  )
+
+    processId: process.id,
+
+    processInstanceId: processInstance.id,
+
+    camundaProcessInstanceId: camundaProcess.id
+  })
 
   // =====================================
-  // PUBLISH EVENT
-  // =====================================
-
-  await eventBus.publish(
-    EVENTS.WORKFLOW_STARTED,
-    {
-      transactionId,
-      processId: process.id,
-      processInstanceId:
-        processInstance.id,
-      camundaProcessInstanceId
-    }
-  )
-
-  // =====================================
-  // RESPONSE
+  // response
   // =====================================
 
   return {
-
-    message:
-      'Workflow started successfully',
+    message: 'Workflow started successfully',
 
     data: {
-
       transactionId,
 
-      processInstanceId:
-        processInstance.id,
+      processInstanceId: processInstance.id,
 
-      camundaProcessInstanceId,
+      camundaProcessInstanceId: camundaProcess.id,
 
-      currentTask:
-        currentTask?.name || null,
+      currentTask: currentTask?.name || null,
 
       status: 'running'
     }
@@ -290,6 +171,3 @@ async function startWorkflow ({
 module.exports = {
   startWorkflow
 }
-
-
-

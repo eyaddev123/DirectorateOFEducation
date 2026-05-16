@@ -470,7 +470,6 @@ const swaggerOptions = {
           type: 'object',
           minProperties: 1,
           properties: {
-            name: { type: 'string', example: 'تحويل طالب محدث' },
             is_active: { type: 'boolean', example: true }
           }
         },
