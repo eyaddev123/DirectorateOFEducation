@@ -5,7 +5,8 @@ const {
   ValidateUpdateDepartment
 } = require('../validations/departmentValidation')
 
-const { Department, Organization } = require('../../../entities')
+const departmentRepository = require('../repositories/departmentRepository')
+const organizationRepository = require('../repositories/organizationRepository')
 
 // ================= CREATE =================
 async function createDepartmentService(data) {
@@ -18,7 +19,7 @@ async function createDepartmentService(data) {
     throw err
   }
 
-  const organization = await Organization.findByPk(data.organization_id)
+  const organization = await organizationRepository.findById(data.organization_id)
   if (!organization) {
     const err = new Error('المؤسسة غير موجودة')
     err.statusCode = 404
@@ -26,7 +27,7 @@ async function createDepartmentService(data) {
   }
 
   if (data.parent_id) {
-    const parent = await Department.findByPk(data.parent_id)
+    const parent = await departmentRepository.findById(data.parent_id)
     if (!parent) {
       const err = new Error('القسم الأب غير موجود')
       err.statusCode = 404
@@ -34,7 +35,7 @@ async function createDepartmentService(data) {
     }
   }
 
-  const department = await Department.create({
+  const department = await departmentRepository.create({
     name: data.name,
     organization_id: data.organization_id,
     parent_id: data.parent_id ?? null,
@@ -63,7 +64,7 @@ async function updateDepartmentService(data, id) {
     throw err
   }
 
-  const department = await Department.findByPk(departmentId)
+  const department = await departmentRepository.findById(departmentId)
 
   if (!department) {
     const err = new Error('القسم غير موجود')
@@ -72,7 +73,7 @@ async function updateDepartmentService(data, id) {
   }
 
   if (data.organization_id !== undefined) {
-    const organization = await Organization.findByPk(data.organization_id)
+    const organization = await organizationRepository.findById(data.organization_id)
     if (!organization) {
       const err = new Error('المؤسسة غير موجودة')
       err.statusCode = 404
@@ -87,7 +88,7 @@ async function updateDepartmentService(data, id) {
       throw err
     }
 
-    const parent = await Department.findByPk(data.parent_id)
+    const parent = await departmentRepository.findById(data.parent_id)
     if (!parent) {
       const err = new Error('القسم الأب غير موجود')
       err.statusCode = 404
@@ -100,10 +101,7 @@ async function updateDepartmentService(data, id) {
   if (data.organization_id !== undefined) payload.organization_id = data.organization_id
   if (data.parent_id !== undefined) payload.parent_id = data.parent_id
 
-  await department.update(payload)
-  await department.reload()
-
-  return department
+  return departmentRepository.updateInstance(department, payload)
 }
 
 // ================= TOGGLE STATUS =================
@@ -116,7 +114,7 @@ async function toggleDepartmentStatusService(id) {
     throw err
   }
 
-  const department = await Department.findByPk(departmentId)
+  const department = await departmentRepository.findById(departmentId)
 
   if (!department) {
     const err = new Error('القسم غير موجود')
@@ -124,10 +122,7 @@ async function toggleDepartmentStatusService(id) {
     throw err
   }
 
-  await department.update({ is_active: !department.is_active })
-  await department.reload()
-
-  return department
+  return departmentRepository.updateInstance(department, { is_active: !department.is_active })
 }
 
 // ================= DELETE =================
@@ -140,7 +135,7 @@ async function deleteDepartmentService(id) {
     throw err
   }
 
-  const department = await Department.findByPk(departmentId)
+  const department = await departmentRepository.findById(departmentId)
 
   if (!department) {
     const err = new Error('القسم غير موجود')
@@ -148,22 +143,14 @@ async function deleteDepartmentService(id) {
     throw err
   }
 
-  await department.destroy()
+  await departmentRepository.destroyInstance(department)
 
   return { id: departmentId }
 }
 
 // ================= GET ALL =================
 async function getAllDepartmentsService() {
-  const rows = await Department.findAll({
-    order: [['id', 'ASC']],
-    include: [
-      { model: Organization, as: 'organization' },
-      { model: Department, as: 'parent' }
-    ]
-  })
-
-  return rows
+  return departmentRepository.findAll()
 }
 
 // ================= GET LEAVES BY ORGANIZATION =================
@@ -178,18 +165,14 @@ async function getLeafDepartmentsByOrganizationService(organizationId) {
     throw err
   }
 
-  const organization = await Organization.findByPk(orgId)
+  const organization = await organizationRepository.findById(orgId)
   if (!organization) {
     const err = new Error('المؤسسة غير موجودة')
     err.statusCode = 404
     throw err
   }
 
-  const departments = await Department.findAll({
-    where: { organization_id: orgId },
-    attributes: ['id', 'name', 'parent_id'],
-    order: [['id', 'ASC']]
-  })
+  const departments = await departmentRepository.findAllByOrganizationId(orgId)
 
   if (departments.length === 0) return []
 
@@ -230,13 +213,7 @@ async function getDepartmentByIdService(id) {
     throw err
   }
 
-  const department = await Department.findByPk(departmentId, {
-    include: [
-      { model: Organization, as: 'organization' },
-      { model: Department, as: 'parent' },
-      { model: Department, as: 'children' }
-    ]
-  })
+  const department = await departmentRepository.findByIdWithRelations(departmentId)
 
   if (!department) {
     const err = new Error('القسم غير موجود')

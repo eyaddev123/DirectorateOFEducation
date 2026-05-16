@@ -5,13 +5,12 @@ const {
   ValidateUpdateRole
 } = require('../validations/roleValidation')
 
-const {
-  sequelize,
-  Role,
-  OrgDeptRole,
-  Organization,
-  Department
-} = require('../../../entities')
+const { sequelize } = require('../../../entities')
+
+const organizationRepository = require('../repositories/organizationRepository')
+const departmentRepository = require('../repositories/departmentRepository')
+const roleRepository = require('../repositories/roleRepository')
+const orgDeptRoleRepository = require('../repositories/orgDeptRoleRepository')
 
 function buildCamundaGroupKey(roleCode, organizationId, departmentId) {
   return `${roleCode}__ORG${organizationId}__DEPT${departmentId}`
@@ -28,14 +27,14 @@ async function createRoleService(data) {
     throw err
   }
 
-  const organization = await Organization.findByPk(data.organization_id)
+  const organization = await organizationRepository.findById(data.organization_id)
   if (!organization) {
     const err = new Error('المؤسسة غير موجودة')
     err.statusCode = 404
     throw err
   }
 
-  const department = await Department.findByPk(data.department_id)
+  const department = await departmentRepository.findById(data.department_id)
   if (!department) {
     const err = new Error('القسم غير موجود')
     err.statusCode = 404
@@ -49,7 +48,7 @@ async function createRoleService(data) {
   }
 
   if (data.parent_id) {
-    const parent = await OrgDeptRole.findByPk(data.parent_id)
+    const parent = await orgDeptRoleRepository.findById(data.parent_id)
     if (!parent) {
       const err = new Error('الدور الأب غير موجود')
       err.statusCode = 404
@@ -58,13 +57,10 @@ async function createRoleService(data) {
   }
 
   const result = await sequelize.transaction(async (t) => {
-    let role = await Role.findOne({
-      where: { code: data.code },
-      transaction: t
-    })
+    let role = await roleRepository.findByCode(data.code, { transaction: t })
 
     if (!role) {
-      role = await Role.create(
+      role = await roleRepository.create(
         {
           name: data.name,
           code: data.code
@@ -73,14 +69,12 @@ async function createRoleService(data) {
       )
     }
 
-    const duplicate = await OrgDeptRole.findOne({
-      where: {
-        role_id: role.id,
-        organization_id: data.organization_id,
-        department_id: data.department_id
-      },
-      transaction: t
-    })
+    const duplicate = await orgDeptRoleRepository.findByRoleOrgDept(
+      role.id,
+      data.organization_id,
+      data.department_id,
+      { transaction: t }
+    )
 
     if (duplicate) {
       const err = new Error('هذا الدور مرتبط مسبقاً بهذه المؤسسة والقسم')
@@ -88,7 +82,7 @@ async function createRoleService(data) {
       throw err
     }
 
-    const orgDeptRole = await OrgDeptRole.create(
+    const orgDeptRole = await orgDeptRoleRepository.create(
       {
         role_id: role.id,
         organization_id: data.organization_id,
@@ -107,16 +101,7 @@ async function createRoleService(data) {
     return { role, orgDeptRole }
   })
 
-  const fullAssignment = await OrgDeptRole.findByPk(result.orgDeptRole.id, {
-    include: [
-      { model: Role, as: 'role' },
-      { model: Organization, as: 'organization' },
-      { model: Department, as: 'department' },
-      { model: OrgDeptRole, as: 'parent' }
-    ]
-  })
-
-  return fullAssignment
+  return orgDeptRoleRepository.findByIdWithRelations(result.orgDeptRole.id)
 }
 
 // ================= UPDATE =================
@@ -138,9 +123,7 @@ async function updateRoleService(data, id) {
     throw err
   }
 
-  const orgDeptRole = await OrgDeptRole.findByPk(orgDeptRoleId, {
-    include: [{ model: Role, as: 'role' }]
-  })
+  const orgDeptRole = await orgDeptRoleRepository.findByIdWithRole(orgDeptRoleId)
 
   if (!orgDeptRole) {
     const err = new Error('السجل غير موجود')
@@ -152,7 +135,7 @@ async function updateRoleService(data, id) {
   const newDeptId = data.department_id ?? orgDeptRole.department_id
 
   if (data.organization_id !== undefined) {
-    const organization = await Organization.findByPk(data.organization_id)
+    const organization = await organizationRepository.findById(data.organization_id)
     if (!organization) {
       const err = new Error('المؤسسة غير موجودة')
       err.statusCode = 404
@@ -161,7 +144,7 @@ async function updateRoleService(data, id) {
   }
 
   if (data.department_id !== undefined) {
-    const department = await Department.findByPk(data.department_id)
+    const department = await departmentRepository.findById(data.department_id)
     if (!department) {
       const err = new Error('القسم غير موجود')
       err.statusCode = 404
@@ -170,7 +153,7 @@ async function updateRoleService(data, id) {
   }
 
   if (data.organization_id !== undefined || data.department_id !== undefined) {
-    const dept = await Department.findByPk(newDeptId)
+    const dept = await departmentRepository.findById(newDeptId)
     if (dept && dept.organization_id !== newOrgId) {
       const err = new Error('القسم لا ينتمي إلى المؤسسة المحددة')
       err.statusCode = 400
@@ -185,7 +168,7 @@ async function updateRoleService(data, id) {
       throw err
     }
 
-    const parent = await OrgDeptRole.findByPk(data.parent_id)
+    const parent = await orgDeptRoleRepository.findById(data.parent_id)
     if (!parent) {
       const err = new Error('الدور الأب غير موجود')
       err.statusCode = 404
@@ -194,13 +177,11 @@ async function updateRoleService(data, id) {
   }
 
   if (data.organization_id !== undefined || data.department_id !== undefined) {
-    const duplicate = await OrgDeptRole.findOne({
-      where: {
-        role_id: orgDeptRole.role_id,
-        organization_id: newOrgId,
-        department_id: newDeptId
-      }
-    })
+    const duplicate = await orgDeptRoleRepository.findByRoleOrgDept(
+      orgDeptRole.role_id,
+      newOrgId,
+      newDeptId
+    )
 
     if (duplicate && duplicate.id !== orgDeptRoleId) {
       const err = new Error('هذا الدور مرتبط مسبقاً بهذه المؤسسة والقسم')
@@ -222,18 +203,9 @@ async function updateRoleService(data, id) {
     )
   }
 
-  await orgDeptRole.update(payload)
+  await orgDeptRoleRepository.updateInstance(orgDeptRole, payload)
 
-  const fullAssignment = await OrgDeptRole.findByPk(orgDeptRoleId, {
-    include: [
-      { model: Role, as: 'role' },
-      { model: Organization, as: 'organization' },
-      { model: Department, as: 'department' },
-      { model: OrgDeptRole, as: 'parent' }
-    ]
-  })
-
-  return fullAssignment
+  return orgDeptRoleRepository.findByIdWithRelations(orgDeptRoleId)
 }
 
 // ================= TOGGLE STATUS =================
@@ -246,7 +218,7 @@ async function toggleRoleStatusService(id) {
     throw err
   }
 
-  const orgDeptRole = await OrgDeptRole.findByPk(orgDeptRoleId)
+  const orgDeptRole = await orgDeptRoleRepository.findById(orgDeptRoleId)
 
   if (!orgDeptRole) {
     const err = new Error('السجل غير موجود')
@@ -254,18 +226,9 @@ async function toggleRoleStatusService(id) {
     throw err
   }
 
-  await orgDeptRole.update({ is_active: !orgDeptRole.is_active })
+  await orgDeptRoleRepository.updateInstance(orgDeptRole, { is_active: !orgDeptRole.is_active })
 
-  const fullAssignment = await OrgDeptRole.findByPk(orgDeptRoleId, {
-    include: [
-      { model: Role, as: 'role' },
-      { model: Organization, as: 'organization' },
-      { model: Department, as: 'department' },
-      { model: OrgDeptRole, as: 'parent' }
-    ]
-  })
-
-  return fullAssignment
+  return orgDeptRoleRepository.findByIdWithRelations(orgDeptRoleId)
 }
 
 // ================= DELETE =================
@@ -278,7 +241,7 @@ async function deleteRoleService(id) {
     throw err
   }
 
-  const orgDeptRole = await OrgDeptRole.findByPk(orgDeptRoleId)
+  const orgDeptRole = await orgDeptRoleRepository.findById(orgDeptRoleId)
 
   if (!orgDeptRole) {
     const err = new Error('السجل غير موجود')
@@ -286,24 +249,14 @@ async function deleteRoleService(id) {
     throw err
   }
 
-  await orgDeptRole.destroy()
+  await orgDeptRoleRepository.destroyInstance(orgDeptRole)
 
   return { id: orgDeptRoleId }
 }
 
 // ================= GET ALL =================
 async function getAllRolesService() {
-  const rows = await OrgDeptRole.findAll({
-    order: [['id', 'ASC']],
-    include: [
-      { model: Role, as: 'role' },
-      { model: Organization, as: 'organization' },
-      { model: Department, as: 'department' },
-      { model: OrgDeptRole, as: 'parent' }
-    ]
-  })
-
-  return rows
+  return orgDeptRoleRepository.findAll()
 }
 
 // ================= GET BY ID =================
@@ -316,15 +269,7 @@ async function getRoleByIdService(id) {
     throw err
   }
 
-  const orgDeptRole = await OrgDeptRole.findByPk(orgDeptRoleId, {
-    include: [
-      { model: Role, as: 'role' },
-      { model: Organization, as: 'organization' },
-      { model: Department, as: 'department' },
-      { model: OrgDeptRole, as: 'parent' },
-      { model: OrgDeptRole, as: 'children' }
-    ]
-  })
+  const orgDeptRole = await orgDeptRoleRepository.findByIdWithRelations(orgDeptRoleId, { includeChildren: true })
 
   if (!orgDeptRole) {
     const err = new Error('السجل غير موجود')
@@ -347,24 +292,14 @@ async function getRolesByDepartmentService(departmentId) {
     throw err
   }
 
-  const department = await Department.findByPk(deptId)
+  const department = await departmentRepository.findById(deptId)
   if (!department) {
     const err = new Error('القسم غير موجود')
     err.statusCode = 404
     throw err
   }
 
-  const rows = await OrgDeptRole.findAll({
-    where: { department_id: deptId, is_active: true },
-    include: [
-      {
-        model: Role,
-        as: 'role',
-        attributes: ['id', 'name', 'code']
-      }
-    ],
-    order: [['id', 'ASC']]
-  })
+  const rows = await orgDeptRoleRepository.findActiveByDepartmentIdWithRole(deptId)
 
   return rows
     .filter(r => r.role)
