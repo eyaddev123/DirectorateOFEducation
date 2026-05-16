@@ -99,73 +99,6 @@ async function registerEmployee(userData) {
 // ================== REGISTER CITIZEN — Step 1 ===================
 async function registerCitizen(userData) {
 
-//   const sequelize = User.sequelize
-
-//   const transaction = await sequelize.transaction()
-
-//   try {
-
-//     const { error } = validateRegisterCitizen(userData)
-
-//     if (error) {
-//       throw new Error(error.details.map(d => d.message).join(', '))
-//     }
-
-//     const existingUser = await User.findOne({
-//       where: { email: userData.email },
-//       transaction
-//     })
-
-//     if (existingUser) {
-//       throw new Error('Email already exists')
-//     }
-
-//  const orgDeptRole =
-//   await orgDeptRolesClient.getCitizenRole()
-
-//     if (!orgDeptRole) {
-//       throw new Error('CITIZEN role not found')
-//     }
-
-//     const hashedPassword = await bcrypt.hash(userData.password, 10)
-
-//     const inputUserDTO = new RegisterCitizenInputDTO({
-//       ...userData,
-//       password: hashedPassword
-//     })
-
-//     const user = await User.create(
-//       { ...inputUserDTO, is_active: false },
-//       { transaction }
-//     )
-
-//     await UserRoleAssignment.create({
-//       user_id: user.id,
-//       organization_department_roles_id: orgDeptRole.id
-//     }, { transaction })
-
-//     await transaction.commit()
-
-//     if (!user.phone_number) {
-//       throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب')
-//     }
-
-//     const session_id = await saveAndSendOtp(user.id, user.phone_number)
-
-//     return {
-//       session_id,
-//       message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
-//     }
-
-//   } catch (error) {
-
-//     if (!transaction.finished) {
-//       await transaction.rollback()
-//     }
-
-//     throw error
-//   }
-  
   const sequelize = User.sequelize
 
   const transaction = await sequelize.transaction()
@@ -187,7 +120,7 @@ async function registerCitizen(userData) {
       throw new Error('Email already exists')
     }
 
-  const orgDeptRole =
+ const orgDeptRole =
   await orgDeptRolesClient.getCitizenRole()
 
     if (!orgDeptRole) {
@@ -202,7 +135,7 @@ async function registerCitizen(userData) {
     })
 
     const user = await User.create(
-      { ...inputUserDTO },
+      { ...inputUserDTO, is_active: false },
       { transaction }
     )
 
@@ -211,92 +144,159 @@ async function registerCitizen(userData) {
       organization_department_roles_id: orgDeptRole.id
     }, { transaction })
 
-    const token = jwt.sign(
-      { id: user.id },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    )
-
     await transaction.commit()
 
+    if (!user.phone_number) {
+      throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب')
+    }
+
+    const session_id = await saveAndSendOtp(user.id, user.phone_number)
+
     return {
-      token,
-      user: new RegisterCitizenOutputDTO(user),
-      role_code: 'CITIZEN'
+      session_id,
+      message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
     }
 
   } catch (error) {
 
-    await transaction.rollback()
+    if (!transaction.finished) {
+      await transaction.rollback()
+    }
 
     throw error
   }
+  
+  // const sequelize = User.sequelize
+
+  // const transaction = await sequelize.transaction()
+
+  // try {
+
+  //   const { error } = validateRegisterCitizen(userData)
+
+  //   if (error) {
+  //     throw new Error(error.details.map(d => d.message).join(', '))
+  //   }
+
+  //   const existingUser = await User.findOne({
+  //     where: { email: userData.email },
+  //     transaction
+  //   })
+
+  //   if (existingUser) {
+  //     throw new Error('Email already exists')
+  //   }
+
+  // const orgDeptRole =
+  // await orgDeptRolesClient.getCitizenRole()
+
+  //   if (!orgDeptRole) {
+  //     throw new Error('CITIZEN role not found')
+  //   }
+
+  //   const hashedPassword = await bcrypt.hash(userData.password, 10)
+
+  //   const inputUserDTO = new RegisterCitizenInputDTO({
+  //     ...userData,
+  //     password: hashedPassword
+  //   })
+
+  //   const user = await User.create(
+  //     { ...inputUserDTO },
+  //     { transaction }
+  //   )
+
+  //   await UserRoleAssignment.create({
+  //     user_id: user.id,
+  //     organization_department_roles_id: orgDeptRole.id
+  //   }, { transaction })
+
+  //   const token = jwt.sign(
+  //     { id: user.id },
+  //     JWT_SECRET,
+  //     { expiresIn: '30d' }
+  //   )
+
+  //   await transaction.commit()
+
+  //   return {
+  //     token,
+  //     user: new RegisterCitizenOutputDTO(user),
+  //     role_code: 'CITIZEN'
+  //   }
+
+  // } catch (error) {
+
+  //   await transaction.rollback()
+
+  //   throw error
+  // }
 }
 
 // ================== LOGIN — Step 1 ===================
 async function login(userData) {
-  // const { error } = validateLogin(userData)
-  // if (error) throw new Error(error.details.map(d => d.message).join(', '))
-
-  // const inputDTO = new LoginInputDTO(userData)
-
-  // const user = await User.findOne({ where: { userName: inputDTO.userName } })
-  // if (!user) throw new Error('Invalid userName or password')
-
-  // const isValid = await bcrypt.compare(inputDTO.password, user.password)
-  // if (!isValid) throw new Error('Invalid userName or password')
-
-  // if (!user.is_active) throw new Error('الحساب غير مفعّل. سجّل من جديد أو تواصل مع الدعم')
-  // if (!user.phone_number) throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب')
-
-  // const session_id = await saveAndSendOtp(user.id, user.phone_number)
-
-  // return {
-  //   session_id,
-  //   message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
-  // }
-    const { error } = validateLogin(userData)
-  if (error) {
-    throw new Error(error.details.map(d => d.message).join(', '))
-  }
+  const { error } = validateLogin(userData)
+  if (error) throw new Error(error.details.map(d => d.message).join(', '))
 
   const inputDTO = new LoginInputDTO(userData)
 
-  const user = await User.findOne({
-    where: { userName: inputDTO.userName }
-  })
-
-  if (!user) {
-    throw new Error('Invalid userName or password')
-  }
+  const user = await User.findOne({ where: { userName: inputDTO.userName } })
+  if (!user) throw new Error('Invalid userName or password')
 
   const isValid = await bcrypt.compare(inputDTO.password, user.password)
-  if (!isValid) {
-    throw new Error('Invalid userName or password')
-  }
+  if (!isValid) throw new Error('Invalid userName or password')
 
-  const roleAssign = await UserRoleAssignment.findAll({
-    where: { user_id: user.id },
-    attributes: ['organization_department_roles_id']
-  })
+  if (!user.is_active) throw new Error('الحساب غير مفعّل. سجّل من جديد أو تواصل مع الدعم')
+  if (!user.phone_number) throw new Error('لا يوجد رقم هاتف مرتبط بهذا الحساب')
 
-  if (!roleAssign.length) {
-    throw new Error('User has no roles')
-  }
-
-  const roleIds = roleAssign.map(r => r.organization_department_roles_id)
-
-  const token = jwt.sign(
-    { id: user.id },
-    JWT_SECRET,
-    { expiresIn: '30d' }
-  )
+  const session_id = await saveAndSendOtp(user.id, user.phone_number)
 
   return {
-    user: new LoginOutputDTO(user),
-    roles: roleIds,
-    token
+    session_id,
+    message: 'تم إرسال رمز التحقق على رقم الموبايل. أدخله خلال دقيقتين.',
   }
+  //   const { error } = validateLogin(userData)
+  // if (error) {
+  //   throw new Error(error.details.map(d => d.message).join(', '))
+  // }
+
+  // const inputDTO = new LoginInputDTO(userData)
+
+  // const user = await User.findOne({
+  //   where: { userName: inputDTO.userName }
+  // })
+
+  // if (!user) {
+  //   throw new Error('Invalid userName or password')
+  // }
+
+  // const isValid = await bcrypt.compare(inputDTO.password, user.password)
+  // if (!isValid) {
+  //   throw new Error('Invalid userName or password')
+  // }
+
+  // const roleAssign = await UserRoleAssignment.findAll({
+  //   where: { user_id: user.id },
+  //   attributes: ['organization_department_roles_id']
+  // })
+
+  // if (!roleAssign.length) {
+  //   throw new Error('User has no roles')
+  // }
+
+  // const roleIds = roleAssign.map(r => r.organization_department_roles_id)
+
+  // const token = jwt.sign(
+  //   { id: user.id },
+  //   JWT_SECRET,
+  //   { expiresIn: '30d' }
+  // )
+
+  // return {
+  //   user: new LoginOutputDTO(user),
+  //   roles: roleIds,
+  //   token
+  // }
 }
 
 // ================== VERIFY REGISTER OTP — Step 2 ===================
